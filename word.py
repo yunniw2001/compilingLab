@@ -48,7 +48,6 @@ def lexicalAnalysis(linelist):
                     if word[index+1] == '=':
                         print('Eq')
                         index +=1
-                        continue
                     else:
                         print('Assign')
                 else:
