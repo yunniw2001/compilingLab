@@ -78,7 +78,7 @@ def lexicalAnalysis(linelist):
                 sys.exit(0)
             index +=1
 if __name__ == '__main__':
-    fileRoute = input()
+    fileRoute = sys.argv[1]
     file = open(fileRoute)
     line = file.readline()
     while line:
