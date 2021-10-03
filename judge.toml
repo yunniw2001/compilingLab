@@ -1,6 +1,6 @@
 [jobs.lexer]
 
-image = { source = "dockerfile", path = ".", tag = lexer" }
+image = { source = "dockerfile", path = "." }
 
 run = [
   "python word.py $input",
