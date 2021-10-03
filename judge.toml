@@ -1,7 +1,0 @@
-[jobs.pascal_lex]
-
-image = { source = "dockerfile", path = ".", tag = lexer" }
-
-run = [
-  "python word.py $input",
-]
