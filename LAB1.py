@@ -10,7 +10,7 @@ def judge_alpha(token):
     global resultList
     if token == 'int':
         tokenList.append(token)
-        resultList.append('define dsco_local i32 ')
+        resultList.append('define dso_local i32 ')
     elif token == 'main':
         tokenList.append(token)
         resultList.append('@main')
