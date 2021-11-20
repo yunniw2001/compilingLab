@@ -215,10 +215,10 @@ if __name__ == '__main__':
     #     lineList = line.split()
     #     lexicalAnalysis(lineList)
     #     line = file.readline()
-    # input = sys.argv[1]
-    # ir = sys.argv[2]
-    input = 'D:\大三上\编译原理\lab\in.txt'
-    ir = 'D:\大三上\编译原理\lab\out.txt'
+    input = sys.argv[1]
+    ir = sys.argv[2]
+    # input = 'D:\大三上\编译原理\lab\in.txt'
+    # ir = 'D:\大三上\编译原理\lab\out.txt'
     file = open(input)
     line = file.readline()
     while line:
