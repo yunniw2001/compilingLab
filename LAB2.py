@@ -311,18 +311,18 @@ class syntax_analysis:
 
 
 if __name__ == '__main__':
-    fileRoute = sys.argv[1]
-    file = open(fileRoute)
+    # fileRoute = sys.argv[1]
+    # file = open(fileRoute)
     # line = file.readline()
     # while line:
     #     lineList = line.split()
     #     lexicalAnalysis(lineList)
     #     line = file.readline()
-    # input = sys.argv[1]
-    # ir = sys.argv[2]
+    input = sys.argv[1]
+    ir = sys.argv[2]
     # input = 'D:\大三上\编译原理\lab\in.txt'
     # ir = 'D:\大三上\编译原理\lab\out.txt'
-    # file = open(input)
+    file = open(input)
     line = file.readline()
     while line:
         if ifNotes and ('*/' not in line):
