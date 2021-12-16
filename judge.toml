@@ -3,5 +3,5 @@
 image = { source = "dockerfile", path = "." }
 
 run = [
-  "python LAB1.py $input $ir",
+  "python LAB2.py $input $ir",
 ]
