@@ -5,8 +5,9 @@ resultList = []
 ifNotes = 0
 SymbolStack = []
 ExpInputStack = []
-registerNum = 0
-ExpTable=[[-1,-1,-1,-1,-2,1],[-1,-1,-1,-1,-2,1],[1,1,-2,-2,1,1],[-1,-1,-1,-1,0,-2],[1,1,-2,-2,1,1],[-1,-1,-1,-1,-2]]
+registerNum = 1
+ExpTable = [[1, -1, -1, -1, 1, 1], [1, 1, -1, -1, 1, 1], [1, 1, -2, -2, 1, 1], [-1, -1, -1, -1, 0, -2],
+            [1, 1, -2, -2, 1, 1], [-1, -1, -1, -1, -2, -2]]
 
 
 def judge_alpha(token):
@@ -31,7 +32,7 @@ def judge_number(token):
     if token[0] != '0':
         tokenList.append(token)
     else:
-        if len(token)>=2 and (token[1] == 'x' or token[1] == 'X'):
+        if len(token) >= 2 and (token[1] == 'x' or token[1] == 'X'):
             token = token[2:]
             for mem in token:
                 if (not mem.isdigit()) and not ('a' <= mem.lower() <= 'f'):
@@ -56,17 +57,17 @@ def lexical_analysis(linelist):
         index = 0
         while index < len(word):
             if ifNotes:
-                if word[index] == '*' and index <len(word)-1:
-                    index +=1
+                if word[index] == '*' and index < len(word) - 1:
+                    index += 1
                     if word[index] == '/':
                         ifNotes = 0
-                        index+=1
+                        index += 1
                         continue
                     else:
-                        index+=1
+                        index += 1
                         continue
                 else:
-                    index+=1
+                    index += 1
                     continue
             if word[index].isalpha():
                 while word[index].isalpha():
@@ -77,14 +78,15 @@ def lexical_analysis(linelist):
                 judge_alpha(token)
                 token = ''
                 if index < len(word):
-                    while word[index] == ';' or word[index] == '(' or word[index] == ')' or word[index] == '}' or word[index] == '{':
+                    while word[index] == ';' or word[index] == '(' or word[index] == ')' or word[index] == '}' or word[
+                        index] == '{':
                         token = word[index]
                         tokenList.append(token)
                         token = ''
                         index += 1
-                        if index >=len(word):
+                        if index >= len(word):
                             break
-                index-=1
+                index -= 1
             elif word[index].isdigit():
                 while word[index].isdigit() or word[index].isalpha():
                     token += word[index]
@@ -94,12 +96,14 @@ def lexical_analysis(linelist):
                 index -= 1
                 judge_number(token)
                 token = ''
-            elif word[index] == ';' or word[index] == '(' or word[index] == ')' or word[index] == '}' or word[index] == '{' or word[index] == '-' or word[index] == '+':
+            elif word[index] == ';' or word[index] == '(' or word[index] == ')' or word[index] == '}' or word[
+                index] == '{' or word[index] == '-' or word[index] == '+' or word[index] == '/' or word[index] == '*' or \
+                    word[index] == '%':
                 token = word[index]
                 tokenList.append(token)
                 token = ''
             elif word[index] == '/':
-                index+=1
+                index += 1
                 if word[index] == '/':
                     return
                 elif word[index] == '*':
@@ -111,39 +115,147 @@ def lexical_analysis(linelist):
                     sys.exit(-1)
             else:
                 sys.exit(-1)
-            index+=1
-# class Operator_precedence:
-#
-#     def Operator_precedence_grammar(self):
-#         global SymbolStack
-#         global registerNum
-#         global ExpInputStack
-#         if len(ExpInputStack) == 1 and ExpInputStack[0].isdigit():
-#             res = ExpInputStack[0]
-#             ExpInputStack = []
-#             SymbolStack = []
-#             return res
-#         for symbol in ExpInputStack:
-#             top = ExpInputStack[len(ExpInputStack)-1]
-#             topIndex = self.getIndex(top)
-#             symbolIndex = self.getIndex(symbol)
-#             # if ExpTable[topIndex][symbolIndex] == 1:
-#
-#
-#
-#     def getIndex(c):
-#         if c =='+':
-#             return 0
-#         elif c =='-':
-#             return 1
-#         elif c.isdigit():
-#             return 2
-#         elif c == '(':
-#             return 3
-#         elif c ==')':
-#             return 4
-#         elif c =='#':
-#             return 5
+            index += 1
+
+class Expression:
+    isregister: False
+    content = ''
+
+class Operator_precedence:
+    top = 0
+
+
+    def Operator_precedence_grammar(self):
+        global SymbolStack
+        global registerNum
+        global ExpInputStack
+        global ExpTable
+        SymbolStack.append('#')
+        ExpInputStack.append('#')
+        self.top = 0
+        while self.top < len(ExpInputStack):
+            input_symbol = ExpInputStack[self.top]
+            if isinstance(SymbolStack[-1],Expression):
+                stackTop = -2
+                priority = self.judgePriority(SymbolStack[-2], input_symbol,-2)
+            else:
+                stackTop = -1
+                priority = self.judgePriority(SymbolStack[-1], input_symbol,-1)
+            if SymbolStack[stackTop] == input_symbol and input_symbol == '#':
+                return
+            if priority == -2:
+                sys.exit(-1)
+            elif priority == 1:
+                if SymbolStack[stackTop].isdigit():
+                    tmp = Expression()
+                    tmp.content = SymbolStack[stackTop]
+                    SymbolStack.pop()
+                    SymbolStack.append(tmp)
+                elif SymbolStack[stackTop] == '*' or SymbolStack[stackTop] == '/' or SymbolStack[stackTop] == '%':
+                    if isinstance(SymbolStack[-3],Expression): num1 = SymbolStack[-3].content
+                    else:
+                        num1 = SymbolStack[-3]
+                    if isinstance(SymbolStack[-1],Expression): num2 = SymbolStack[-1].content
+                    else:
+                        num2 = SymbolStack[-1]
+                    self.two_operator(SymbolStack[stackTop],num1,num2)
+                    SymbolStack.pop()
+                    SymbolStack.pop()
+                    SymbolStack.pop()
+                    tmp = Expression()
+                    tmp.content = '%' +str(registerNum)
+                    registerNum+=1
+                    SymbolStack.append(tmp)
+                elif SymbolStack[stackTop] =='+' or SymbolStack[stackTop] == '-':
+                    if SymbolStack[stackTop-1] == '+' or SymbolStack[stackTop-1] == '-' or SymbolStack[stackTop-1] == '#' or SymbolStack[stackTop-1] == '(':
+                        if isinstance(SymbolStack[-1],Expression):
+                            num = SymbolStack[-1].content
+                        else:
+                            num = SymbolStack[-1]
+                        if SymbolStack[-2] == '-':
+                            self.single_operator(SymbolStack[stackTop],num)
+                            SymbolStack.pop()
+                            SymbolStack.pop()
+                            tmp = Expression()
+                            tmp.content = '%' +str(registerNum)
+                            registerNum +=1
+                            SymbolStack.append(tmp)
+                        else:
+                            tmp = SymbolStack[-1]
+                            SymbolStack.pop()
+                            SymbolStack.pop()
+                            SymbolStack.append(tmp)
+                    else:
+
+                        if isinstance(SymbolStack[-3], Expression):
+                            num1 = SymbolStack[-3].content
+                        else:
+                            num1 = SymbolStack[-3]
+                        if isinstance(SymbolStack[-1], Expression):
+                            num2 = SymbolStack[-1].content
+                        else:
+                            num2 = SymbolStack[-1]
+                        self.two_operator(SymbolStack[stackTop], num1, num2)
+                        SymbolStack.pop()
+                        SymbolStack.pop()
+                        SymbolStack.pop()
+                        tmp = Expression()
+                        tmp.content = '%' + str(registerNum)
+                        registerNum += 1
+                        SymbolStack.append(tmp)
+                elif SymbolStack[stackTop] == ')':
+                    SymbolStack.pop()
+                    tmp = SymbolStack[-1]
+                    SymbolStack.pop()
+                    SymbolStack.pop()
+                    SymbolStack.append(tmp)
+            else:
+                SymbolStack.append(ExpInputStack[self.top])
+                self.top += 1
+
+    def two_operator(self, stack_symbol, number1, number2):
+        resultList.append('%' + str(registerNum) + ' = ' + self.get_operator_char(stack_symbol) + ' i32 ' + str(
+            number1) + ', ' + str(number2) + '\n')
+
+    def single_operator(self, stack_symbol, input_symbol):
+        resultList.append(
+            '%' + str(registerNum) + ' = ' + self.get_operator_char(stack_symbol) + ' i32 ' + '0, ' + str(input_symbol) + '\n')
+
+    def getIndex(self, c):
+        if c == '+' or c == '-':
+            return 0
+        elif c == '*' or c == '/' or c == '%':
+            return 1
+        elif c.isdigit() or c[0] == '%':
+            return 2
+        elif c == '(':
+            return 3
+        elif c == ')':
+            return 4
+        elif c == '#':
+            return 5
+
+    def judgePriority(self, stack_symbol, input,stacktop):
+        sy_idx = self.getIndex(stack_symbol)
+        in_idx = self.getIndex(input)
+        result = ExpTable[sy_idx][in_idx]
+        if stacktop == -1:
+            if stack_symbol =='+' or stack_symbol == '-':
+                if input == '+' or input =='-':
+                    return -1
+        return result
+
+    def get_operator_char(self, c):
+        if c == '+':
+            return 'add'
+        elif c == '-':
+            return 'sub'
+        elif c == '*':
+            return 'mul'
+        elif c == '/':
+            return 'sdiv'
+        elif c == '%':
+            return 'mod'
 
 
 class syntax_analysis:
@@ -158,10 +270,10 @@ class syntax_analysis:
         self.tokenStream = tokenList
 
     def readSym(self):
-        if self.tokenIndex< len(self.tokenStream):
+        if self.tokenIndex < len(self.tokenStream):
             self.sym = self.tokenStream[self.tokenIndex]
             self.tokenIndex += 1
-            while self.sym == '\n' and self.tokenIndex<len(self.tokenStream):
+            while self.sym == '\n' and self.tokenIndex < len(self.tokenStream):
                 resultList.append('\n')
                 self.sym = self.tokenStream[self.tokenIndex]
                 self.tokenIndex += 1
@@ -187,7 +299,6 @@ class syntax_analysis:
                         self.Block()
                         return 1
         sys.exit(-1)
-
 
     def FuncType(self):
         if self.sym == 'int':
@@ -220,7 +331,8 @@ class syntax_analysis:
                         return 1
                     else:
                         sys.exit(-1)
-                else:sys.exit(-1)
+                else:
+                    sys.exit(-1)
             else:
                 sys.exit(-1)
         else:
@@ -229,10 +341,13 @@ class syntax_analysis:
     def Stmt(self):
         if self.sym == 'return':
             if self.readSym():
-                self.Exp()
-            if self.readSym():
+                while not self.sym == ';':
+                    ExpInputStack.append(self.sym)
+                    self.readSym()
                 if self.sym == ';':
-                    resultList.append('ret i32 %'+str(self.cur_register_num))
+                    o_p = Operator_precedence()
+                    o_p.Operator_precedence_grammar()
+                    resultList.append('ret i32 %' + str(registerNum-1))
                     return 1
         else:
             sys.exit(-1)
@@ -244,6 +359,7 @@ class syntax_analysis:
             return 1
         else:
             sys.exit(-1)
+
     def Exp(self):
         if self.AddExp():
             return 1;
@@ -263,7 +379,7 @@ class syntax_analysis:
             sys.exit(-1)
 
     def UnaryExp(self):
-        if self.sym == '+' :
+        if self.sym == '+':
             if self.UnaryOp():
                 if self.readSym():
                     if self.UnaryExp():
@@ -275,12 +391,14 @@ class syntax_analysis:
                     if self.UnaryExp():
                         if self.cur_register_num == 0:
                             self.cur_register_num = self.cur_register_num + 1
-                            resultList.append('%'+str(self.cur_register_num)+' = sub i32 0, '+str(self.cur_register_content)+'\n')
+                            resultList.append('%' + str(self.cur_register_num) + ' = sub i32 0, ' + str(
+                                self.cur_register_content) + '\n')
                             self.cur_register_content = 1
                         else:
                             self.cur_register_num = self.cur_register_num + 1
-                            resultList.append('%' + str(self.cur_register_num) + ' = sub i32 0, %'+str(self.cur_register_content)+'\n')
-                            self.cur_register_content = self.cur_register_content+1
+                            resultList.append('%' + str(self.cur_register_num) + ' = sub i32 0, %' + str(
+                                self.cur_register_content) + '\n')
+                            self.cur_register_content = self.cur_register_content + 1
                         return 1
             sys.exit(-1)
         elif self.sym == '(' or self.sym.isdigit():
@@ -290,7 +408,7 @@ class syntax_analysis:
         sys.exit(-1)
 
     def PrimaryExp(self):
-        if self.sym=='(':
+        if self.sym == '(':
             if self.readSym():
                 if self.Exp():
                     if self.readSym():
@@ -302,7 +420,6 @@ class syntax_analysis:
                 return 1
             sys.exit(-1)
         sys.exit(-1)
-
 
     def UnaryOp(self):
         if self.sym == '+' or self.sym == '-':
@@ -318,10 +435,10 @@ if __name__ == '__main__':
     #     lineList = line.split()
     #     lexicalAnalysis(lineList)
     #     line = file.readline()
-    input = sys.argv[1]
-    ir = sys.argv[2]
-    # input = 'D:\大三上\编译原理\lab\in.txt'
-    # ir = 'D:\大三上\编译原理\lab\out.txt'
+    # input = sys.argv[1]
+    # ir = sys.argv[2]
+    input = 'D:\大三上\编译原理\compilingLab\in.txt'
+    ir = 'D:\大三上\编译原理\compilingLab\out.txt'
     file = open(input)
     line = file.readline()
     while line:
@@ -336,9 +453,8 @@ if __name__ == '__main__':
         sys.exit(-1)
     s_a = syntax_analysis()
     s_a.CompUnit()
-    outFile = open(ir,mode='w')
+    outFile = open(ir, mode='w')
     for sym in resultList:
         outFile.write(sym)
     outFile.close()
     sys.exit(0)
-
