@@ -140,6 +140,9 @@ class Operator_precedence:
                 priority = self.judgePriority(SymbolStack[-2], input_symbol,-2)
             else:
                 stackTop = -1
+                if SymbolStack[stackTop] == '*' or SymbolStack[stackTop] == '/' or SymbolStack[stackTop] == '%':
+                    if input_symbol == '*' or input_symbol == '/' or input_symbol == '%':
+                        sys.exit(-1)
                 priority = self.judgePriority(SymbolStack[-1], input_symbol,-1)
             if SymbolStack[stackTop] == input_symbol and input_symbol == '#':
                 return
@@ -152,9 +155,12 @@ class Operator_precedence:
                     SymbolStack.pop()
                     SymbolStack.append(tmp)
                 elif SymbolStack[stackTop] == '*' or SymbolStack[stackTop] == '/' or SymbolStack[stackTop] == '%':
-                    if isinstance(SymbolStack[-3],Expression): num1 = SymbolStack[-3].content
-                    else:
-                        num1 = SymbolStack[-3]
+                    try:
+                        if isinstance(SymbolStack[-3],Expression): num1 = SymbolStack[-3].content
+                        else:
+                            num1 = SymbolStack[-3]
+                    except IndexError:
+                        sys.exit(-1)
                     if isinstance(SymbolStack[-1],Expression): num2 = SymbolStack[-1].content
                     else:
                         num2 = SymbolStack[-1]
@@ -255,7 +261,7 @@ class Operator_precedence:
         elif c == '/':
             return 'sdiv'
         elif c == '%':
-            return 'mod'
+            return 'smod'
 
 
 class syntax_analysis:
