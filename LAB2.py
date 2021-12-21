@@ -261,7 +261,7 @@ class Operator_precedence:
         elif c == '/':
             return 'sdiv'
         elif c == '%':
-            return 'smod'
+            return 'srem'
 
 
 class syntax_analysis:
