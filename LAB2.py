@@ -97,7 +97,7 @@ def lexical_analysis(linelist):
                 judge_number(token)
                 token = ''
             elif word[index] == ';' or word[index] == '(' or word[index] == ')' or word[index] == '}' or word[
-                index] == '{' or word[index] == '-' or word[index] == '+' or (word[index] == '/' and not word[index+1] =='/' and not word[index+1] == '*' ) or word[index] == '*' or \
+                index] == '{' or word[index] == '-' or word[index] == '+' or (word[index] == '/' and (len(word) ==1 or (not word[index+1] =='/' and not word[index+1] == '*'))  ) or word[index] == '*' or \
                     word[index] == '%':
                 token = word[index]
                 tokenList.append(token)
