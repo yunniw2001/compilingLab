@@ -310,10 +310,6 @@ class Operator_precedence:
                             num2 = SymbolStack[-1].res
                         else:
                             num2 = int(SymbolStack[-1])
-                        self.two_operator(SymbolStack[stackTop], num1, num2)
-                        SymbolStack.pop()
-                        SymbolStack.pop()
-                        SymbolStack.pop()
                         tmp = Expression()
                         if SymbolStack[stackTop] == '*':
                             tmp.res = num1 * num2
@@ -321,6 +317,9 @@ class Operator_precedence:
                             tmp.res = num1 // num2
                         elif SymbolStack[stackTop] == '%':
                             tmp.res = num1 % num2
+                        SymbolStack.pop()
+                        SymbolStack.pop()
+                        SymbolStack.pop()
                         SymbolStack.append(tmp)
                     elif SymbolStack[stackTop] == '+' or SymbolStack[stackTop] == '-':
                         if SymbolStack[stackTop - 1] == '+' or SymbolStack[stackTop - 1] == '-' or SymbolStack[
@@ -625,7 +624,23 @@ class syntax_analysis:
 
     def ConstExp(self):
         while not self.sym == ';' and not self.sym == ',':
-            ExpInputStack.append(self.sym)
+            if self.sym[0] == '_' or self.sym[0].isalpha():
+                tmp = findIndexByContent(self.sym)
+                if tmp == -1:
+                    sys.exit(-1)
+                else:
+                    tmpVal = identifierList[tmp]
+                    if tmpVal.type == 'ConstVal':
+                        ExpInputStack.append(str(tmpVal.value))
+                    else:
+                        resultList.append('%' + str(registerNum) + ' = load i32, i32* ' + str(tmpVal.register) + '\n')
+                        tmpExp = Expression()
+                        tmpExp.isregister = True
+                        tmpExp.content = '%' + str(registerNum)
+                        registerNum += 1
+                        ExpInputStack.append(tmpExp)
+            else:
+                ExpInputStack.append(self.sym)
             self.readSym()
         o_p = Operator_precedence()
         return o_p.Operator_precedence_grammar('ConstExp')
@@ -787,20 +802,20 @@ if __name__ == '__main__':
     file = open(input)
     line = file.readline()
     while line:
-        print(line)
-    #     if ifNotes and ('*/' not in line):
-    #         line = file.readline()
-    #         continue
-    #     lineList = line.split()
-    #     lexical_analysis(lineList)
-    #     tokenList.append('\n')
+        # print(line)
+        if ifNotes and ('*/' not in line):
+            line = file.readline()
+            continue
+        lineList = line.split()
+        lexical_analysis(lineList)
+        tokenList.append('\n')
         line = file.readline()
-    # if ifNotes:
-    #     sys.exit(-1)
-    # s_a = syntax_analysis()
-    # s_a.CompUnit()
-    # outFile = open(ir, mode='w')
-    # for sym in resultList:
-    #     outFile.write(sym)
-    # outFile.close()
+    if ifNotes:
+        sys.exit(-1)
+    s_a = syntax_analysis()
+    s_a.CompUnit()
+    outFile = open(ir, mode='w')
+    for sym in resultList:
+        outFile.write(sym)
+    outFile.close()
     sys.exit(0)
