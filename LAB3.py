@@ -12,6 +12,7 @@ ExpTable = [[1, -1, -1, -1, 1, 1], [1, 1, -1, -1, 1, 1], [1, 1, -2, -2, 1, 1], [
 identifierList = []
 constNum = 0
 LVarRegister = 0
+FuncIdent = ['getint','getch','putint','putch']
 
 def judge_alpha(token):
     global tokenList
@@ -27,6 +28,8 @@ def judge_alpha(token):
     elif token == 'const':
         constNum += 1
         tokenList.append(token)
+    elif FuncIdent.index(token):
+        
     elif token[0] == '_' or token[0].isalpha():
         pos = findIndexByContent(token)
         if pos == -1:
@@ -795,10 +798,10 @@ if __name__ == '__main__':
     #     lineList = line.split()
     #     lexicalAnalysis(lineList)
     #     line = file.readline()
-    input = sys.argv[1]
-    ir = sys.argv[2]
-    # input = 'D:\大三上\编译原理\compilingLab\in.txt'
-    # ir = 'D:\大三上\编译原理\compilingLab\out.txt'
+    # input = sys.argv[1]
+    # ir = sys.argv[2]
+    input = 'D:\大三上\编译原理\compilingLab\in.txt'
+    ir = 'D:\大三上\编译原理\compilingLab\out.txt'
     file = open(input)
     line = file.readline()
     while line:
