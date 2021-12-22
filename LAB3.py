@@ -2,8 +2,6 @@
 # coding=utf-8
 import sys
 
-import numpy
-
 tokenList = []
 resultList = []
 ifNotes = 0
@@ -890,7 +888,7 @@ if __name__ == '__main__':
     # input = 'D:\大三上\编译原理\compilingLab\in.txt'
     # ir = 'D:\大三上\编译原理\compilingLab\out.txt'
     file = open(input)
-    FuncAppear = numpy.zeros(len(FuncIdent), numpy.int64)
+    FuncAppear = [0 for i in range(len(FuncIdent))]
     line = file.readline()
     while line:
         # print(line)
