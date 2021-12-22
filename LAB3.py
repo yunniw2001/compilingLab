@@ -1,5 +1,8 @@
-# coding:utf-8
+#!/usr/bin/env python
+# coding=utf-8
 import sys
+
+import numpy
 
 tokenList = []
 resultList = []
@@ -12,7 +15,9 @@ ExpTable = [[1, -1, -1, -1, 1, 1], [1, 1, -1, -1, 1, 1], [1, 1, -2, -2, 1, 1], [
 identifierList = []
 constNum = 0
 LVarRegister = 0
-FuncIdent = ['getint','getch','putint','putch']
+FuncIdent = ['getint', 'getch', 'putint', 'putch']
+FuncAppear = []
+
 
 def judge_alpha(token):
     global tokenList
@@ -28,8 +33,10 @@ def judge_alpha(token):
     elif token == 'const':
         constNum += 1
         tokenList.append(token)
-    elif FuncIdent.index(token):
-        
+    elif token in FuncIdent:
+        pos = FuncIdent.index(token)
+        FuncAppear[pos] = 1
+        tokenList.append(token)
     elif token[0] == '_' or token[0].isalpha():
         pos = findIndexByContent(token)
         if pos == -1:
@@ -121,7 +128,7 @@ def lexical_analysis(linelist):
                 index] == '{' or word[index] == '-' or word[index] == '+' or (word[index] == '/' and (
                     len(word) == 1 or (not word[index + 1] == '/' and not word[index + 1] == '*'))) or word[
                 index] == '*' or \
-                    word[index] == '%' or word[index] == '=' or word[index] ==',':
+                    word[index] == '%' or word[index] == '=' or word[index] == ',':
                 token = word[index]
                 tokenList.append(token)
                 token = ''
@@ -147,7 +154,7 @@ def findIndexByContent(content):
     while i < len(identifierList):
         if identifierList[i].content == content:
             return i
-        i+=1
+        i += 1
     return -1
 
 
@@ -173,15 +180,17 @@ class Operator_precedence:
         global registerNum
         global ExpInputStack
         global ExpTable
+        if len(ExpInputStack) == 0:
+            sys.exit(-1)
         SymbolStack.append('#')
         ExpInputStack.append('#')
         self.top = 0
         if type == 'LVal':
             while self.top < len(ExpInputStack):
                 input_symbol = ExpInputStack[self.top]
-                if isinstance(input_symbol,Expression):
+                if isinstance(input_symbol, Expression):
                     SymbolStack.append(input_symbol)
-                    self.top+=1
+                    self.top += 1
                     continue
                 if isinstance(SymbolStack[-1], Expression):
                     stackTop = -2
@@ -275,9 +284,9 @@ class Operator_precedence:
         elif type == 'ConstExp':
             while self.top < len(ExpInputStack):
                 input_symbol = ExpInputStack[self.top]
-                if isinstance(input_symbol,Expression):
+                if isinstance(input_symbol, Expression):
                     SymbolStack.append(input_symbol)
-                    self.top+=1
+                    self.top += 1
                     continue
                 if isinstance(SymbolStack[-1], Expression):
                     stackTop = -2
@@ -441,6 +450,14 @@ class syntax_analysis:
             sys.exit(-1)
 
     def CompUnit(self):
+        i = 0
+        while i < len(FuncAppear):
+            if FuncAppear[i] == 1:
+                mid = ''
+                if FuncIdent[i] == 'putch' or FuncIdent[i] == 'putint':
+                    mid = 'i32'
+                resultList.append('declare i32 @' + FuncIdent[i] + '(' + mid + ')\n')
+            i += 1
         if self.readSym():
             self.FuncDef()
             return 1
@@ -496,7 +513,7 @@ class syntax_analysis:
             if tmp == -1:
                 sys.exit(-1)
             else:
-                identifierList[tmp].type = 'LVal'
+                # identifierList[tmp].type = 'LVal'
                 return identifierList[tmp]
         else:
             sys.exit(-1)
@@ -509,8 +526,8 @@ class syntax_analysis:
             resultList.append('{\n')
             # 给变量分配空间
             i = 1
-            LVarRegister = len(identifierList)-constNum
-            while i <= len(identifierList)-constNum:
+            LVarRegister = len(identifierList) - constNum
+            while i <= len(identifierList) - constNum:
                 resultList.append('%' + str(i) + ' = alloca i32\n')
                 # identifierList[i].register = '%' + str(registerNum)
                 registerNum += 1
@@ -571,7 +588,7 @@ class syntax_analysis:
         tmp = identifier()
         tmp = self.Ident('VarDef')
         tmp.register = '%' + str(LVarRegister)
-        LVarRegister -=1
+        LVarRegister -= 1
         if self.readSym():
             if self.sym == ',' or self.sym == ';':
                 return 1
@@ -583,28 +600,7 @@ class syntax_analysis:
         sys.exit(-1)
 
     def InitVal(self):
-        global registerNum
-        while not self.sym == ';' and not self.sym == ',':
-            if self.sym[0] == '_' or self.sym[0].isalpha():
-                tmp = findIndexByContent(self.sym)
-                if tmp == -1:
-                    sys.exit(-1)
-                else:
-                    tmpVal = identifierList[tmp]
-                    if tmpVal.type == 'ConstVal':
-                        ExpInputStack.append(str(tmpVal.value))
-                    else:
-                        resultList.append('%'+str(registerNum)+' = load i32, i32* '+str(tmpVal.register)+'\n')
-                        tmpExp = Expression()
-                        tmpExp.isregister = True
-                        tmpExp.content = '%' +str(registerNum)
-                        registerNum+=1
-                        ExpInputStack.append(tmpExp)
-            else:
-                ExpInputStack.append(self.sym)
-            self.readSym()
-        o_p = Operator_precedence()
-        return o_p.Operator_precedence_grammar('LVal')
+        return self.Exp()
 
     def Btype(self):
         if self.sym == 'int':
@@ -653,7 +649,7 @@ class syntax_analysis:
         if self.sym == 'return':
             if self.readSym():
                 while not self.sym == ';':
-                    if self.sym[0] == '_' or self.sym[0].isalpha():
+                    if (self.sym[0] == '_' or self.sym[0].isalpha()) and self.sym not in FuncIdent:
                         tmp = findIndexByContent(self.sym)
                         if tmp == -1:
                             sys.exit(-1)
@@ -662,22 +658,27 @@ class syntax_analysis:
                             if tmpVal.type == 'ConstVal':
                                 ExpInputStack.append(str(tmpVal.value))
                             else:
-                                resultList.append('%' + str(registerNum) + ' = load i32, i32* ' + str(tmpVal.register)+'\n')
+                                resultList.append(
+                                    '%' + str(registerNum) + ' = load i32, i32* ' + str(tmpVal.register) + '\n')
                                 tmpExp = Expression()
                                 tmpExp.isregister = True
                                 tmpExp.content = '%' + str(registerNum)
                                 registerNum += 1
                                 ExpInputStack.append(tmpExp)
+                    elif self.sym in FuncIdent:
+                        self.Func()
                     else:
                         ExpInputStack.append(self.sym)
                     self.readSym()
                 if self.sym == ';':
                     o_p = Operator_precedence()
-                    o_p.Operator_precedence_grammar('LVal')
-                    resultList.append('ret i32 %' + str(registerNum - 1)+'\n')
+                    res = o_p.Operator_precedence_grammar('LVal')
+                    resultList.append('ret i32 ' + str(res) + '\n')
                     return 1
-        elif self.sym[0] == '_' or self.sym[0].isalpha():
+        elif (self.sym[0] == '_' or self.sym[0].isalpha()) and self.sym not in FuncIdent:
             tmpLVar = self.LVal()
+            if not tmpLVar.type == 'LVal':
+                sys.exit(-1)
             if self.readSym():
                 if self.sym == '=':
                     if self.readSym():
@@ -685,6 +686,8 @@ class syntax_analysis:
                         if self.sym == ';':
                             resultList.append('store i32 ' + str(tmp) + ', i32* ' + tmpLVar.register + '\n')
                             return 1
+        elif self.sym in FuncIdent:
+            self.Func()
         else:
             while not self.sym == ';':
                 self.readSym()
@@ -706,8 +709,8 @@ class syntax_analysis:
         # else:
         #     sys.exit(-1)
         global registerNum
-        while not self.sym == ';':
-            if self.sym[0] == '_' or self.sym[0].isalpha():
+        while not self.sym == ';' and not self.sym == ',':
+            if (self.sym[0] == '_' or self.sym[0].isalpha()) and self.sym not in FuncIdent:
                 tmp = findIndexByContent(self.sym)
                 if tmp == -1:
                     sys.exit(-1)
@@ -716,18 +719,102 @@ class syntax_analysis:
                     if tmpVal.type == 'ConstVal':
                         ExpInputStack.append(str(tmpVal.value))
                     else:
-                        resultList.append('%' + str(registerNum) + ' = load i32, i32* ' + str(tmpVal.register)+'\n')
+                        resultList.append('%' + str(registerNum) + ' = load i32, i32* ' + str(tmpVal.register) + '\n')
                         tmpExp = Expression()
                         tmpExp.isregister = True
                         tmpExp.content = '%' + str(registerNum)
                         registerNum += 1
                         ExpInputStack.append(tmpExp)
+            elif self.sym.isdigit():
+                ExpInputStack.append(self.sym)
+            elif self.sym in FuncIdent:
+                res = self.Func()
+                tmpExp = Expression()
+                tmpExp.isregister = True
+                tmpExp.content = res
+                ExpInputStack.append(tmpExp)
             else:
                 ExpInputStack.append(self.sym)
             self.readSym()
-        if self.sym == ';':
+        if self.sym == ';' or self.sym == ',':
             o_p = Operator_precedence()
             return o_p.Operator_precedence_grammar('LVal')
+
+    def Func(self):
+        global registerNum
+        if self.sym == 'getint':
+            if self.readSym():
+                if self.sym == '(':
+                    resultList.append('%' + str(registerNum) + ' = call i32 @getint()\n')
+                    cur = '%' + str(registerNum)
+                    registerNum += 1
+                    if self.readSym():
+                        if self.sym == ')':
+                            return cur
+        elif self.sym == 'getch':
+            if self.readSym():
+                if self.sym == '(':
+                    resultList.append('%' + str(registerNum) + ' = call i32 @getch()\n')
+                    cur = '%' + str(registerNum)
+                    registerNum += 1
+                    if self.readSym():
+                        if self.sym == ')':
+                            return cur
+        elif self.sym == 'putint':
+            if self.readSym():
+                if self.sym == '(':
+                    if self.readSym():
+                        res = self.FuncJudgeIfEnd_Exp()
+                        resultList.append('call void @putint(i32 ' + res + ')\n')
+                        if self.sym == ')':
+                            if self.readSym():
+                                if self.sym == ';':
+                                    return 1
+        elif self.sym == 'putch':
+            if self.readSym():
+                if self.sym == '(':
+                    if self.readSym():
+                        res = self.FuncJudgeIfEnd_Exp()
+                        resultList.append('call void @putch(i32 ' + res + ')\n')
+                        if self.sym == ')':
+                            if self.readSym():
+                                if self.sym == ';':
+                                    return 1
+
+    def FuncJudgeIfEnd_Exp(self):
+        global registerNum
+        while not tokenList[self.tokenIndex] == ';':
+            if (self.sym[0] == '_' or self.sym[0].isalpha()) and self.sym not in FuncIdent:
+                tmp = findIndexByContent(self.sym)
+                if tmp == -1:
+                    sys.exit(-1)
+                else:
+                    tmpVal = identifierList[tmp]
+                    if tmpVal.type == 'ConstVal':
+                        ExpInputStack.append(str(tmpVal.value))
+                    else:
+                        resultList.append(
+                            '%' + str(registerNum) + ' = load i32, i32* ' + str(tmpVal.register) + '\n')
+                        tmpExp = Expression()
+                        tmpExp.isregister = True
+                        tmpExp.content = '%' + str(registerNum)
+                        registerNum += 1
+                        ExpInputStack.append(tmpExp)
+            elif self.sym.isdigit():
+                ExpInputStack.append(self.sym)
+            elif self.sym in FuncIdent:
+                res = self.Func()
+                tmpExp = Expression()
+                tmpExp.isregister = True
+                tmpExp.content = res
+                registerNum += 1
+                ExpInputStack.append(tmpExp)
+            else:
+                ExpInputStack.append(self.sym)
+            self.readSym()
+        o_p = Operator_precedence()
+        res = o_p.Operator_precedence_grammar('LVal')
+        return res
 
     def AddExp(self):
         if self.MulExp():
@@ -798,11 +885,12 @@ if __name__ == '__main__':
     #     lineList = line.split()
     #     lexicalAnalysis(lineList)
     #     line = file.readline()
-    # input = sys.argv[1]
-    # ir = sys.argv[2]
-    input = 'D:\大三上\编译原理\compilingLab\in.txt'
-    ir = 'D:\大三上\编译原理\compilingLab\out.txt'
+    input = sys.argv[1]
+    ir = sys.argv[2]
+    # input = 'D:\大三上\编译原理\compilingLab\in.txt'
+    # ir = 'D:\大三上\编译原理\compilingLab\out.txt'
     file = open(input)
+    FuncAppear = numpy.zeros(len(FuncIdent), numpy.int64)
     line = file.readline()
     while line:
         # print(line)
