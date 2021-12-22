@@ -451,10 +451,10 @@ class syntax_analysis:
         i = 0
         while i < len(FuncAppear):
             if FuncAppear[i] == 1:
-                mid = ''
                 if FuncIdent[i] == 'putch' or FuncIdent[i] == 'putint':
-                    mid = 'i32'
-                resultList.append('declare i32 @' + FuncIdent[i] + '(' + mid + ')\n')
+                    resultList.append('declare void @' + FuncIdent[i] + '(i32)\n')
+                else:
+                    resultList.append('declare i32 @' + FuncIdent[i] + '()\n')
             i += 1
         if self.readSym():
             self.FuncDef()
