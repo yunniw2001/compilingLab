@@ -719,7 +719,7 @@ class syntax_analysis:
             elif self.sym == '=':
                 if self.readSym():
                     storeRegister = self.InitVal().content
-                    resultList.append('store i32 ' + str(storeRegister.content) + ', i32* ' + tmp.register + '\n')
+                    resultList.append('store i32 ' + str(storeRegister) + ', i32* ' + tmp.register + '\n')
                     return 1
         sys.exit(-1)
 
