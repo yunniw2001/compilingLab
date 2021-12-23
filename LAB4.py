@@ -220,7 +220,7 @@ class Operator_precedence:
                             sys.exit(-1)
                     priority = self.judgePriority(SymbolStack[-1], input_symbol, -1)
                 if SymbolStack[stackTop] == input_symbol and input_symbol == '#':
-                    returnRes = SymbolStack[-1].content
+                    returnRes = SymbolStack[-1]
                     ExpInputStack = []
                     SymbolStack = []
                     return returnRes
@@ -238,7 +238,7 @@ class Operator_precedence:
                             if isinstance(SymbolStack[-3], Expression):
                                 num1 = SymbolStack[-3].content
                                 if SymbolStack[-3].type == 'i1':
-                                    num1 = self.trans_i1_to_i32(num1)
+                                    num1 = trans_i1_to_i32(num1)
                             else:
                                 num1 = SymbolStack[-3]
                         except IndexError:
@@ -246,7 +246,7 @@ class Operator_precedence:
                         if isinstance(SymbolStack[-1], Expression):
                             num2 = SymbolStack[-1].content
                             if SymbolStack[-1].type == 'i1':
-                                num2 = self.trans_i1_to_i32(num2)
+                                num2 = trans_i1_to_i32(num2)
                         else:
                             num2 = SymbolStack[-1]
                         self.two_operator(SymbolStack[stackTop], num1, num2)
@@ -264,7 +264,7 @@ class Operator_precedence:
                             if isinstance(SymbolStack[-1], Expression):
                                 num = SymbolStack[-1].content
                                 if SymbolStack[-1].type == 'i1':
-                                    num = self.trans_i1_to_i32(num)
+                                    num = trans_i1_to_i32(num)
                             else:
                                 num = SymbolStack[-1]
                             if SymbolStack[-2] == '-':
@@ -289,13 +289,13 @@ class Operator_precedence:
                             if isinstance(SymbolStack[-3], Expression):
                                 num1 = SymbolStack[-3].content
                                 if SymbolStack[-3].type == 'i1':
-                                    num1 = self.trans_i1_to_i32(num1)
+                                    num1 = trans_i1_to_i32(num1)
                             else:
                                 num1 = SymbolStack[-3]
                             if isinstance(SymbolStack[-1], Expression):
                                 num2 = SymbolStack[-1].content
                                 if SymbolStack[-1].type == 'i1':
-                                    num2 = self.trans_i1_to_i32(num2)
+                                    num2 = trans_i1_to_i32(num2)
                             else:
                                 num2 = SymbolStack[-1]
                             self.two_operator(SymbolStack[stackTop], num1, num2)
@@ -311,9 +311,9 @@ class Operator_precedence:
                         if isinstance(SymbolStack[-1], Expression):
                             num = SymbolStack[-1].content
                             if SymbolStack[-1].type == 'i32':
-                                num = self.trans_i32_to_i1(num)
+                                num = trans_i32_to_i1(num)
                         else:
-                            num = self.trans_i32_to_i1(SymbolStack[-1])
+                            num = trans_i32_to_i1(SymbolStack[-1])
                         self.single_operator(SymbolStack[stackTop], num)
                         tmp = Expression()
                         tmp.content = '%' + str(registerNum)
@@ -333,7 +333,7 @@ class Operator_precedence:
                             if isinstance(SymbolStack[-3], Expression):
                                 num1 = SymbolStack[-3].content
                                 if SymbolStack[-3].type == 'i1':
-                                    num1 = self.trans_i1_to_i32(num1)
+                                    num1 = trans_i1_to_i32(num1)
                             else:
                                 num1 = SymbolStack[-3]
                         except IndexError:
@@ -341,7 +341,7 @@ class Operator_precedence:
                         if isinstance(SymbolStack[-1], Expression):
                             num2 = SymbolStack[-1].content
                             if SymbolStack[-1].type == 'i1':
-                                num2 = self.trans_i1_to_i32(num2)
+                                num2 = trans_i1_to_i32(num2)
                         else:
                             num2 = SymbolStack[-1]
                         self.two_operator(SymbolStack[stackTop], num1, num2)
@@ -467,20 +467,6 @@ class Operator_precedence:
             resultList.append('%' + str(registerNum) + ' = ' + self.get_operator_char(stack_symbol) + ' i32 ' + str(
             number1) + ', ' + str(number2) + '\n')
 
-    def trans_i1_to_i32(self,oriRegister):
-        global registerNum
-        resultList.append('%'+str(registerNum)+' = zext i1 '+str(oriRegister)+' to i32\n')
-        res = '%'+str(registerNum)
-        registerNum+=1
-        return res
-
-    def trans_i32_to_i1(selfself,oriRegister):
-        global registerNum
-        resultList.append('%'+str(registerNum)+' = icmp ne i32 '+str(oriRegister)+', 0\n')
-        res = '%' + str(registerNum)
-        registerNum += 1
-        return res
-
     def getComparatorChar(self,c):
         if c == '==':
             return 'eq'
@@ -548,7 +534,19 @@ class Operator_precedence:
         elif c == '%':
             return 'srem'
 
+def trans_i1_to_i32(oriRegister):
+    global registerNum
+    resultList.append('%'+str(registerNum)+' = zext i1 '+str(oriRegister)+' to i32\n')
+    res = '%'+str(registerNum)
+    registerNum+=1
+    return res
 
+def trans_i32_to_i1(oriRegister):
+    global registerNum
+    resultList.append('%'+str(registerNum)+' = icmp ne i32 '+str(oriRegister)+', 0\n')
+    res = '%' + str(registerNum)
+    registerNum += 1
+    return res
 class syntax_analysis:
     tokenStream = []
     sym = ''
@@ -720,8 +718,8 @@ class syntax_analysis:
                 return 1
             elif self.sym == '=':
                 if self.readSym():
-                    storeRegister = self.InitVal()
-                    resultList.append('store i32 ' + str(storeRegister) + ', i32* ' + tmp.register + '\n')
+                    storeRegister = self.InitVal().content
+                    resultList.append('store i32 ' + str(storeRegister.content) + ', i32* ' + tmp.register + '\n')
                     return 1
         sys.exit(-1)
 
@@ -801,7 +799,7 @@ class syntax_analysis:
                 if self.sym == ';':
                     o_p = Operator_precedence()
                     res = o_p.Operator_precedence_grammar('LVal')
-                    resultList.append('ret i32 ' + str(res) + '\n')
+                    resultList.append('ret i32 ' + str(res.content) + '\n')
                     return 1
         elif (self.sym[0] == '_' or self.sym[0].isalpha()) and self.sym not in FuncIdent and not self.sym == 'if' and not self.sym == 'else':
             tmpLVar = self.LVal()
@@ -812,7 +810,7 @@ class syntax_analysis:
                     if self.readSym():
                         tmp = self.Exp()
                         if self.sym == ';':
-                            resultList.append('store i32 ' + str(tmp) + ', i32* ' + tmpLVar.register + '\n')
+                            resultList.append('store i32 ' + str(tmp.content) + ', i32* ' + tmpLVar.register + '\n')
                             return 1
         elif self.sym in FuncIdent:
             self.Func()
@@ -821,6 +819,8 @@ class syntax_analysis:
                 if self.sym == '(':
                     if self.readSym():
                         res = self.Cond()
+                        if res.type == 'i32':
+                            res = trans_i32_to_i1(res.content)
                         resultList.append('br i1 '+res+',label %'+str(registerNum))
                         pos = len(resultList)-1
                         resultList.append(str(registerNum)+':\n')
@@ -841,6 +841,7 @@ class syntax_analysis:
                                         resultList[ifPos]+=(str(registerNum)+'\n')
                                         resultList.append('br label %'+str(registerNum) + '\n')
                                         resultList.append(str(registerNum) + ':\n')
+                                        registerNum+=1
                                     elif self.sym == 'if':
                                         resultList.append('br label %')
                                         ifPos = len(resultList) - 1
@@ -949,7 +950,7 @@ class syntax_analysis:
                 if self.sym == '(':
                     if self.readSym():
                         res = self.FuncJudgeIfEnd_Exp()
-                        resultList.append('call void @putint(i32 ' + res + ')\n')
+                        resultList.append('call void @putint(i32 ' + res.content + ')\n')
                         if self.sym == ')':
                             if self.readSym():
                                 if self.sym == ';':
