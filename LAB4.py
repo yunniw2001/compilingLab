@@ -1050,20 +1050,20 @@ if __name__ == '__main__':
     FuncAppear = [0 for i in range(len(FuncIdent))]
     line = file.readline()
     while line:
-        # print(line)
-        if ifNotes and ('*/' not in line):
-            line = file.readline()
-            continue
-        lineList = line.split()
-        lexical_analysis(lineList)
-        tokenList.append('\n')
+        print(line)
+        # if ifNotes and ('*/' not in line):
+        #     line = file.readline()
+        #     continue
+        # lineList = line.split()
+        # lexical_analysis(lineList)
+        # tokenList.append('\n')
         line = file.readline()
-    if ifNotes:
-        sys.exit(-1)
-    s_a = syntax_analysis()
-    s_a.CompUnit()
-    outFile = open(ir, mode='w')
-    for sym in resultList:
-        outFile.write(sym)
-    outFile.close()
-    sys.exit(0)
+    # if ifNotes:
+    #     sys.exit(-1)
+    # s_a = syntax_analysis()
+    # s_a.CompUnit()
+    # outFile = open(ir, mode='w')
+    # for sym in resultList:
+    #     outFile.write(sym)
+    # outFile.close()
+    # sys.exit(0)
