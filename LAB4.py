@@ -8,8 +8,8 @@ ifNotes = 0
 SymbolStack = []
 ExpInputStack = []
 registerNum = 1
-ExpTable = [[1, -1, -1, -1, 1, 1,1,1,1], [1, 1, -1, -1, 1, 1,1,1,1], [1, 1, -2, -2, 1, 1,1,1,1], [-1, -1, -1, -1, 0, -2,1,1,1],
-            [1, 1, -2, -2, 1, 1,1,1,1], [-1, -1, -1, -1, -2, -2,-1,-1,-1],[-1, -1, -1, -1, 1, 1,1,1,1],[-1, -1, -1, -1, 1, 1,-1,1,1],[-1, -1, -1, -1, 1, 1,-1,-1,1]]
+ExpTable = [[1, -1, -1, -1, 1, 1,1,1,1,-1], [1, 1, -1, -1, 1, 1,1,1,1,-1], [1, 1, -2, -2, 1, 1,1,1,1,-1], [-1, -1, -1, -1, 0, -2,1,1,1,-1],
+            [1, 1, -2, -2, 1, 1,1,1,1,1], [-1, -1, -1, -1, -2, -2,-1,-1,-1,-1],[-1, -1, -1, -1, 1, 1,1,1,1,-1],[-1, -1, -1, -1, 1, 1,-1,1,1,-1],[-1, -1, -1, -1, 1, 1,-1,-1,1,-1],[1, 1, -1, -1, 1, 1,1,1,1,-1]]
 comparator = ['<','>','<=','>=','==','!=']
 identifierList = []
 constNum = 0
@@ -131,7 +131,7 @@ def lexical_analysis(linelist):
                 index] == '{' or word[index] == '-' or word[index] == '+' or (word[index] == '/' and (
                     len(word) == 1 or (not word[index + 1] == '/' and not word[index + 1] == '*'))) or word[
                 index] == '*' or \
-                    word[index] == '%' or (word[index] == '=' and len(word) == 1) or word[index] == ',' :
+                    word[index] == '%' or (word[index] == '=' and len(word) == 1) or word[index] == ',' or word[index] == '!' :
                 token = word[index]
                 tokenList.append(token)
                 token = ''
@@ -179,6 +179,7 @@ class Expression:
     isregister = False
     content = ''
     res = 0
+    type = ''
 
 
 class identifier:
@@ -229,18 +230,23 @@ class Operator_precedence:
                     if SymbolStack[stackTop].isdigit():
                         tmp = Expression()
                         tmp.content = SymbolStack[stackTop]
+                        tmp.type == 'i32'
                         SymbolStack.pop()
                         SymbolStack.append(tmp)
                     elif SymbolStack[stackTop] == '*' or SymbolStack[stackTop] == '/' or SymbolStack[stackTop] == '%':
                         try:
                             if isinstance(SymbolStack[-3], Expression):
                                 num1 = SymbolStack[-3].content
+                                if SymbolStack[-3].type == 'i1':
+                                    num1 = self.trans_i1_to_i32(num1)
                             else:
                                 num1 = SymbolStack[-3]
                         except IndexError:
                             sys.exit(-1)
                         if isinstance(SymbolStack[-1], Expression):
                             num2 = SymbolStack[-1].content
+                            if SymbolStack[-1].type == 'i1':
+                                num2 = self.trans_i1_to_i32(num2)
                         else:
                             num2 = SymbolStack[-1]
                         self.two_operator(SymbolStack[stackTop], num1, num2)
@@ -249,21 +255,28 @@ class Operator_precedence:
                         SymbolStack.pop()
                         tmp = Expression()
                         tmp.content = '%' + str(registerNum)
+                        tmp.type = 'i32'
                         registerNum += 1
                         SymbolStack.append(tmp)
-                    elif SymbolStack[stackTop] == '+' or SymbolStack[stackTop] == '-':
+                    elif SymbolStack[stackTop] == '+' or SymbolStack[stackTop] == '-' :
                         if SymbolStack[stackTop - 1] == '+' or SymbolStack[stackTop - 1] == '-' or SymbolStack[
                             stackTop - 1] == '#' or SymbolStack[stackTop - 1] == '(':
                             if isinstance(SymbolStack[-1], Expression):
                                 num = SymbolStack[-1].content
+                                if SymbolStack[-1].type == 'i1':
+                                    num = self.trans_i1_to_i32(num)
                             else:
                                 num = SymbolStack[-1]
                             if SymbolStack[-2] == '-':
                                 self.single_operator(SymbolStack[stackTop], num)
-                                SymbolStack.pop()
-                                SymbolStack.pop()
                                 tmp = Expression()
                                 tmp.content = '%' + str(registerNum)
+                                if SymbolStack[stackTop] == '!':
+                                    tmp.type = 'i1'
+                                else:
+                                    tmp.type = 'i32'
+                                SymbolStack.pop()
+                                SymbolStack.pop()
                                 registerNum += 1
                                 SymbolStack.append(tmp)
                             else:
@@ -275,10 +288,14 @@ class Operator_precedence:
 
                             if isinstance(SymbolStack[-3], Expression):
                                 num1 = SymbolStack[-3].content
+                                if SymbolStack[-3].type == 'i1':
+                                    num1 = self.trans_i1_to_i32(num1)
                             else:
                                 num1 = SymbolStack[-3]
                             if isinstance(SymbolStack[-1], Expression):
                                 num2 = SymbolStack[-1].content
+                                if SymbolStack[-1].type == 'i1':
+                                    num2 = self.trans_i1_to_i32(num2)
                             else:
                                 num2 = SymbolStack[-1]
                             self.two_operator(SymbolStack[stackTop], num1, num2)
@@ -286,9 +303,23 @@ class Operator_precedence:
                             SymbolStack.pop()
                             SymbolStack.pop()
                             tmp = Expression()
+                            tmp.type = 'i32'
                             tmp.content = '%' + str(registerNum)
                             registerNum += 1
                             SymbolStack.append(tmp)
+                    elif SymbolStack[stackTop] == '!':
+                        if isinstance(SymbolStack[-1], Expression):
+                            num = SymbolStack[-1].content
+                        else:
+                            num = SymbolStack[-1]
+                        self.single_operator(SymbolStack[stackTop], num)
+                        tmp = Expression()
+                        tmp.content = '%' + str(registerNum)
+                        tmp.type = 'i1'
+                        SymbolStack.pop()
+                        SymbolStack.pop()
+                        registerNum += 1
+                        SymbolStack.append(tmp)
                     elif SymbolStack[stackTop] == ')':
                         SymbolStack.pop()
                         tmp = SymbolStack[-1]
@@ -299,12 +330,16 @@ class Operator_precedence:
                         try:
                             if isinstance(SymbolStack[-3], Expression):
                                 num1 = SymbolStack[-3].content
+                                if SymbolStack[-3].type == 'i1':
+                                    num1 = self.trans_i1_to_i32(num1)
                             else:
                                 num1 = SymbolStack[-3]
                         except IndexError:
                             sys.exit(-1)
                         if isinstance(SymbolStack[-1], Expression):
                             num2 = SymbolStack[-1].content
+                            if SymbolStack[-1].type == 'i1':
+                                num2 = self.trans_i1_to_i32(num2)
                         else:
                             num2 = SymbolStack[-1]
                         self.two_operator(SymbolStack[stackTop], num1, num2)
@@ -312,6 +347,7 @@ class Operator_precedence:
                         SymbolStack.pop()
                         SymbolStack.pop()
                         tmp = Expression()
+                        tmp.type ='i1'
                         tmp.content = '%' + str(registerNum)
                         registerNum += 1
                         SymbolStack.append(tmp)
@@ -429,6 +465,13 @@ class Operator_precedence:
             resultList.append('%' + str(registerNum) + ' = ' + self.get_operator_char(stack_symbol) + ' i32 ' + str(
             number1) + ', ' + str(number2) + '\n')
 
+    def trans_i1_to_i32(self,oriRegister):
+        global registerNum
+        resultList.append('%'+str(registerNum)+' = zext i1 '+str(oriRegister)+' to i32\n')
+        res = registerNum
+        registerNum+=1
+        return res
+
     def getComparatorChar(self,c):
         if c == '==':
             return 'eq'
@@ -445,7 +488,10 @@ class Operator_precedence:
 
 
     def single_operator(self, stack_symbol, input_symbol):
-        resultList.append(
+        if stack_symbol == '!':
+            resultList.append('%'+str(registerNum)+' = xor i1 %'+str(input_symbol)+', true\n')
+        else:
+            resultList.append(
             '%' + str(registerNum) + ' = ' + self.get_operator_char(stack_symbol) + ' i32 ' + '0, ' + str(
                 input_symbol) + '\n')
 
@@ -468,6 +514,8 @@ class Operator_precedence:
             return 7
         elif c == '||':
             return 8
+        elif c == '!':
+            return 9
 
     def judgePriority(self, stack_symbol, input, stacktop):
         sy_idx = self.getIndex(stack_symbol)
@@ -704,6 +752,7 @@ class syntax_analysis:
                         resultList.append('%' + str(registerNum) + ' = load i32, i32* ' + str(tmpVal.register) + '\n')
                         tmpExp = Expression()
                         tmpExp.isregister = True
+                        tmpExp.type = 'i32'
                         tmpExp.content = '%' + str(registerNum)
                         registerNum += 1
                         ExpInputStack.append(tmpExp)
@@ -730,6 +779,7 @@ class syntax_analysis:
                                 resultList.append(
                                     '%' + str(registerNum) + ' = load i32, i32* ' + str(tmpVal.register) + '\n')
                                 tmpExp = Expression()
+                                tmpExp.type = 'i32'
                                 tmpExp.isregister = True
                                 tmpExp.content = '%' + str(registerNum)
                                 registerNum += 1
@@ -844,6 +894,7 @@ class syntax_analysis:
                     else:
                         resultList.append('%' + str(registerNum) + ' = load i32, i32* ' + str(tmpVal.register) + '\n')
                         tmpExp = Expression()
+                        tmpExp.type = 'i32'
                         tmpExp.isregister = True
                         tmpExp.content = '%' + str(registerNum)
                         registerNum += 1
@@ -853,6 +904,7 @@ class syntax_analysis:
             elif self.sym in FuncIdent:
                 res = self.Func()
                 tmpExp = Expression()
+                tmpExp.type = 'i32'
                 tmpExp.isregister = True
                 tmpExp.content = res
                 ExpInputStack.append(tmpExp)
@@ -919,6 +971,7 @@ class syntax_analysis:
                         resultList.append(
                             '%' + str(registerNum) + ' = load i32, i32* ' + str(tmpVal.register) + '\n')
                         tmpExp = Expression()
+                        tmpExp.type = 'i32'
                         tmpExp.isregister = True
                         tmpExp.content = '%' + str(registerNum)
                         registerNum += 1
@@ -928,6 +981,7 @@ class syntax_analysis:
             elif self.sym in FuncIdent:
                 res = self.Func()
                 tmpExp = Expression()
+                tmpExp.type = 'i32'
                 tmpExp.isregister = True
                 tmpExp.content = res
                 registerNum += 1
@@ -954,6 +1008,7 @@ class syntax_analysis:
                         resultList.append(
                             '%' + str(registerNum) + ' = load i32, i32* ' + str(tmpVal.register) + '\n')
                         tmpExp = Expression()
+                        tmpExp.type = 'i32'
                         tmpExp.isregister = True
                         tmpExp.content = '%' + str(registerNum)
                         registerNum += 1
@@ -1042,28 +1097,28 @@ if __name__ == '__main__':
     #     lineList = line.split()
     #     lexicalAnalysis(lineList)
     #     line = file.readline()
-    input = sys.argv[1]
-    ir = sys.argv[2]
-    # input = 'D:\大三上\编译原理\compilingLab\in.txt'
-    # ir = 'D:\大三上\编译原理\compilingLab\out.txt'
+    # input = sys.argv[1]
+    # ir = sys.argv[2]
+    input = 'D:\大三上\编译原理\compilingLab\in.txt'
+    ir = 'D:\大三上\编译原理\compilingLab\out.txt'
     file = open(input)
     FuncAppear = [0 for i in range(len(FuncIdent))]
     line = file.readline()
     while line:
-        print(line)
-        # if ifNotes and ('*/' not in line):
-        #     line = file.readline()
-        #     continue
-        # lineList = line.split()
-        # lexical_analysis(lineList)
-        # tokenList.append('\n')
+        # print(line)
+        if ifNotes and ('*/' not in line):
+            line = file.readline()
+            continue
+        lineList = line.split()
+        lexical_analysis(lineList)
+        tokenList.append('\n')
         line = file.readline()
-    # if ifNotes:
-    #     sys.exit(-1)
-    # s_a = syntax_analysis()
-    # s_a.CompUnit()
-    # outFile = open(ir, mode='w')
-    # for sym in resultList:
-    #     outFile.write(sym)
-    # outFile.close()
-    # sys.exit(0)
+    if ifNotes:
+        sys.exit(-1)
+    s_a = syntax_analysis()
+    s_a.CompUnit()
+    outFile = open(ir, mode='w')
+    for sym in resultList:
+        outFile.write(sym)
+    outFile.close()
+    sys.exit(0)
