@@ -1,15 +1,25 @@
 int main() {
 
-    int a, b;
-    a = 070;
-    b = 0x4;
-    a = a - - 4 + + b;
-    if (+-!!!a) {
-        a = - - -1;
+    int a    = 1;
+
+    int b    = 0;
+
+    int c    = 1;
+
+    int d    = 2;
+
+    int e    = 4;
+
+    int flag = 0;
+
+    if (a * b / c == e + d && a * (a + b) + c <= d + e || a - (b * c) == d - a / c) {
+
+        flag = 1;
+
     }
-    else {
-        a = 0 + + b;
-    }
-    putint(a);
+
+    putint(flag);
+
     return 0;
+
 }

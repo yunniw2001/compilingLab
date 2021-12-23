@@ -821,7 +821,9 @@ class syntax_analysis:
                         res = self.Cond()
                         if res.type == 'i32':
                             res = trans_i32_to_i1(res.content)
-                        resultList.append('br i1 '+res+',label %'+str(registerNum))
+                            resultList.append('br i1 '+res+',label %'+str(registerNum))
+                        else:
+                            resultList.append('br i1 ' + res.content + ',label %' + str(registerNum))
                         pos = len(resultList)-1
                         resultList.append(str(registerNum)+':\n')
                         registerNum+=1
@@ -858,7 +860,7 @@ class syntax_analysis:
 
                                 else:
                                     resultList[pos]+=('\n')
-                                    resultList.append('br i1 '+res+',label %'+str(registerNum)+'\n')
+                                    resultList.append('br i1 '+res.content+',label %'+str(registerNum)+'\n')
                                     registerNum += 1
                                     resultList.append(str(registerNum) + ':\n')
                                     registerNum += 1
