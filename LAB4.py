@@ -468,7 +468,7 @@ class Operator_precedence:
     def trans_i1_to_i32(self,oriRegister):
         global registerNum
         resultList.append('%'+str(registerNum)+' = zext i1 '+str(oriRegister)+' to i32\n')
-        res = '%'+registerNum
+        res = '%'+str(registerNum)
         registerNum+=1
         return res
 
