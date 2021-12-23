@@ -310,8 +310,10 @@ class Operator_precedence:
                     elif SymbolStack[stackTop] == '!':
                         if isinstance(SymbolStack[-1], Expression):
                             num = SymbolStack[-1].content
+                            if SymbolStack[-1].type == 'i32':
+                                num = self.trans_i32_to_i1(num)
                         else:
-                            num = SymbolStack[-1]
+                            num = self.trans_i32_to_i1(SymbolStack[-1])
                         self.single_operator(SymbolStack[stackTop], num)
                         tmp = Expression()
                         tmp.content = '%' + str(registerNum)
@@ -470,6 +472,13 @@ class Operator_precedence:
         resultList.append('%'+str(registerNum)+' = zext i1 '+str(oriRegister)+' to i32\n')
         res = '%'+str(registerNum)
         registerNum+=1
+        return res
+
+    def trans_i32_to_i1(selfself,oriRegister):
+        global registerNum
+        resultList.append('%'+str(registerNum)+' = icmp ne i32 '+str(oriRegister)+', 0\n')
+        res = '%' + str(registerNum)
+        registerNum += 1
         return res
 
     def getComparatorChar(self,c):
