@@ -882,7 +882,7 @@ class syntax_analysis:
                                         self.Stmt(pos)
                                         resultList[ifPos]+=(str(registerNum)+'\n')
                                         # resultList[pos] += (', label %' + str(registerNum) + '\n')
-                                        registerNum+=1
+                                        # registerNum+=1
                                         return 1
                                     #resultList[ifPos] += (str(registerNum) + '\n')
                                     return 1
