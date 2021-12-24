@@ -1159,7 +1159,29 @@ if __name__ == '__main__':
     s_a = syntax_analysis()
     s_a.CompUnit()
     outFile = open(ir, mode='w')
-    for sym in resultList:
+    i = 0
+    retRes = []
+    i = 0
+    ifret = 0
+    while i<len(resultList):
+        if 'ret' in resultList[i]:
+            ifret = 1
+            retRes.append(resultList[i])
+            i+=1
+            continue
+        if ifret == 1:
+            if 'br' in resultList[i]:
+                ifret = 0
+                i+=1
+                continue
+            ifret = 0
+            retRes.append(resultList[i])
+            i+=1
+            continue
+        retRes.append(resultList[i])
+        i+=1
+
+    for sym in retRes:
         outFile.write(sym)
     outFile.close()
     sys.exit(0)
