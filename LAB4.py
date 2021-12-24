@@ -332,7 +332,7 @@ class Operator_precedence:
                         SymbolStack.pop()
                         SymbolStack.pop()
                         SymbolStack.append(tmp)
-                    elif SymbolStack[stackTop] in comparator or SymbolStack[stackTop] == '&&' or SymbolStack[stackTop] == '||':
+                    elif SymbolStack[stackTop] in comparator :
                         try:
                             if isinstance(SymbolStack[-3], Expression):
                                 num1 = SymbolStack[-3].content
@@ -357,6 +357,31 @@ class Operator_precedence:
                         tmp.content = '%' + str(registerNum)
                         registerNum += 1
                         SymbolStack.append(tmp)
+                elif SymbolStack[stackTop] == '&&' or SymbolStack[stackTop] == '||':
+                    try:
+                        if isinstance(SymbolStack[-3], Expression):
+                            num1 = SymbolStack[-3].content
+                            if SymbolStack[-3].type == 'i32':
+                                num1 = trans_i32_to_i1(num1)
+                        else:
+                            num1 = SymbolStack[-3]
+                    except IndexError:
+                        sys.exit(-1)
+                    if isinstance(SymbolStack[-1], Expression):
+                        num2 = SymbolStack[-1].content
+                        if SymbolStack[-1].type == 'i32':
+                            num2 = trans_i32_to_i1(num2)
+                    else:
+                        num2 = SymbolStack[-1]
+                    self.two_operator(SymbolStack[stackTop], num1, num2)
+                    SymbolStack.pop()
+                    SymbolStack.pop()
+                    SymbolStack.pop()
+                    tmp = Expression()
+                    tmp.type = 'i1'
+                    tmp.content = '%' + str(registerNum)
+                    registerNum += 1
+                    SymbolStack.append(tmp)
                 else:
                     SymbolStack.append(ExpInputStack[self.top])
                     self.top += 1
