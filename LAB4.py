@@ -859,7 +859,7 @@ class syntax_analysis:
                                     return 1
 
                                 else:
-                                    resultList[pos]+=('\n')
+                                    resultList[pos]+=(', label %' + str(registerNum) + '\n')
                                     resultList.append('br label %'+str(registerNum)+'\n')
                                     resultList.append(str(registerNum) + ':\n')
                                     registerNum+=1
