@@ -5,11 +5,17 @@ int main() {
     int a, b;
 
     if (flag == 0) {
+
         a = getint();
+
         b = getint();
+
     } else if (flag == 1) {
+
         b = getint();
+
         a = getint();
+
     }
 
     putint(a * 10 + b);

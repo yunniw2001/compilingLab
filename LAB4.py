@@ -8,7 +8,7 @@ ifNotes = 0
 SymbolStack = []
 ExpInputStack = []
 registerNum = 1
-ExpTable = [[1, -1, -1, -1, 1, 1,1,1,1,-1], [1, 1, -1, -1, 1, 1,1,1,1,-1], [1, 1, -2, -2, 1, 1,1,1,1,-1], [-1, -1, -1, -1, 0, -2,1,1,1,-1],
+ExpTable = [[1, -1, -1, -1, 1, 1,1,1,1,-1], [1, 1, -1, -1, 1, 1,1,1,1,-1], [1, 1, -2, -2, 1, 1,1,1,1,1], [-1, -1, -1, -1, 0, -2,1,1,1,-1],
             [1, 1, -2, -2, 1, 1,1,1,1,1], [-1, -1, -1, -1, -2, -2,-1,-1,-1,-1],[-1, -1, -1, -1, 1, 1,1,1,1,-1],[-1, -1, -1, -1, 1, 1,-1,1,1,-1],[-1, -1, -1, -1, 1, 1,-1,-1,1,-1],[1, 1, -1, -1, 1, 1,1,1,1,-1]]
 comparator = ['<','>','<=','>=','==','!=']
 identifierList = []
@@ -264,7 +264,7 @@ class Operator_precedence:
                         SymbolStack.append(tmp)
                     elif SymbolStack[stackTop] == '+' or SymbolStack[stackTop] == '-' :
                         if SymbolStack[stackTop - 1] == '+' or SymbolStack[stackTop - 1] == '-' or SymbolStack[
-                            stackTop - 1] == '#' or SymbolStack[stackTop - 1] == '(':
+                            stackTop - 1] == '#' or SymbolStack[stackTop - 1] == '(' or SymbolStack[stackTop-1] in ['>=','<=','<','>','==','||','&&','!=']:
                             if isinstance(SymbolStack[-1], Expression):
                                 num = SymbolStack[-1].content
                                 if SymbolStack[-1].type == 'i1':
@@ -862,13 +862,13 @@ class syntax_analysis:
                                 self.readSym()
                                 if self.sym == 'else':
                                     self.readSym()
-                                    if self.sym == '{':
+                                    if not self.sym == 'if':
                                         resultList.append('br label %')
                                         ifPos = len(resultList)-1
                                         resultList[pos]+=(', label %' + str(registerNum) + '\n')
                                         resultList.append(str(registerNum) + ':\n')
                                         registerNum+=1
-                                        self.Block(3,ifPos)
+                                        self.Stmt(ifPos)
                                         resultList[ifPos]+=(str(registerNum)+'\n')
                                         resultList.append('br label %'+str(registerNum) + '\n')
                                         resultList.append(str(registerNum) + ':\n')
@@ -1036,7 +1036,7 @@ class syntax_analysis:
 
     def CondJudgeIfEnd_exp(self):
         global registerNum
-        while not tokenList[self.tokenIndex] == '{':
+        while not tokenList[self.tokenIndex] == '{' and not (self.sym== ')' and findIndexByContent(tokenList[self.tokenIndex])== -1):
             if (self.sym[0] == '_' or self.sym[0].isalpha()) and self.sym not in FuncIdent and self.sym not in comparator and not self.sym == '&&' and not self.sym == '||':
                 tmp = findIndexByContent(self.sym)
                 if tmp == -1:
