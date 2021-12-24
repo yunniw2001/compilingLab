@@ -860,10 +860,10 @@ class syntax_analysis:
 
                                 else:
                                     resultList[pos]+=('\n')
-                                    resultList.append('br i1 '+res.content+',label %'+str(registerNum)+'\n')
-                                    registerNum += 1
+                                    resultList.append('br label %'+str(registerNum)+'\n')
                                     resultList.append(str(registerNum) + ':\n')
-                                    registerNum += 1
+                                    registerNum+=1
+                                    self.tokenIndex-=1
                                     return 1
             sys.exit(-1)
         elif self.sym == '{':
