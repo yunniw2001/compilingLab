@@ -1036,7 +1036,7 @@ class syntax_analysis:
 
     def CondJudgeIfEnd_exp(self):
         global registerNum
-        while not tokenList[self.tokenIndex] == '{' and not (self.sym== ')' and findIndexByContent(tokenList[self.tokenIndex])== -1):
+        while not tokenList[self.tokenIndex] == '{' and not (self.sym== ')' and findIndexByContent(tokenList[self.tokenIndex])== -1 and not tokenList[self.tokenIndex] in ['+','-','*','%','/','||','>=','<=','>','<','!','!=','==']):
             if (self.sym[0] == '_' or self.sym[0].isalpha()) and self.sym not in FuncIdent and self.sym not in comparator and not self.sym == '&&' and not self.sym == '||':
                 tmp = findIndexByContent(self.sym)
                 if tmp == -1:

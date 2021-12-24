@@ -1,24 +1,24 @@
 int main() {
 
-    int flag = getint();
+    int a    = 1;
 
-    int a, b;
+    int b    = 0;
 
-    if (flag == 0) {
+    int c    = 1;
 
-        a = getint();
+    int d    = 2;
 
-        b = getint();
+    int e    = 4;
 
-    } else if (flag == 1) {
+    int flag = 0;
 
-        b = getint();
+    if (a * b / c == e + d && a * (a + b) + c <= d + e || a - (b * c) == d - a / c) {
 
-        a = getint();
+        flag = 1;
 
     }
 
-    putint(a * 10 + b);
+    putint(flag);
 
     return 0;
 
