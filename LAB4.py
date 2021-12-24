@@ -131,24 +131,28 @@ def lexical_analysis(linelist):
                 index] == '{' or word[index] == '-' or word[index] == '+' or (word[index] == '/' and (
                     len(word) == 1 or (not word[index + 1] == '/' and not word[index + 1] == '*'))) or word[
                 index] == '*' or \
-                    word[index] == '%' or (word[index] == '=' and len(word) == 1) or word[index] == ',' or word[index] == '!' :
+                    word[index] == '%' or (word[index] == '=' and len(word) == 1) or word[index] == ',' or (word[index] == '!' and not word[index+1]=='=') :
                 token = word[index]
                 tokenList.append(token)
                 token = ''
             # 判断是否为逻辑符号
             elif word[index] == '<' or word[index] == '>':
                 token = word[index]
-                if word[index+1] == '=':
-
+                if index+1<len(word) and word[index+1] == '=':
                     index+=1
                     token+=word[index]
                 tokenList.append(token)
                 token = ''
-            elif index+1<len(word) and(word[index] == '=' and word[index+1] == '=') or (word[index] == '&' and word[index+1] == '&') or (word[index] == '|' and word[index+1] == '|'):
-                token = '=='
+            elif index+1<len(word) and(word[index] == '=' and word[index+1] == '=') or (word[index] == '&' and word[index+1] == '&') or (word[index] == '|' and word[index+1] == '|') or (word[index] == '!' and word[index+1] == '='):
+                token = word[index] +word[index+1]
                 tokenList.append(token)
                 token = ''
-                index+=1
+                index+=2
+            elif word[index] in comparator:
+                token = word[index]
+                tokenList.append(token)
+                token = ''
+                index +=1
             elif word[index] == '/':
                 index += 1
                 if word[index] == '/':
@@ -328,7 +332,7 @@ class Operator_precedence:
                         SymbolStack.pop()
                         SymbolStack.pop()
                         SymbolStack.append(tmp)
-                    elif SymbolStack[stackTop] in comparator:
+                    elif SymbolStack[stackTop] in comparator or SymbolStack[stackTop] == '&&' or SymbolStack[stackTop] == '||':
                         try:
                             if isinstance(SymbolStack[-3], Expression):
                                 num1 = SymbolStack[-3].content
