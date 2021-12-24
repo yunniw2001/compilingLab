@@ -878,9 +878,9 @@ class syntax_analysis:
                                         ifPos = len(resultList) - 1
                                         resultList[pos] += (', label %' + str(registerNum) + '\n')
                                         resultList.append(str(registerNum) + ':\n')
+                                        resultList[ifPos] += (str(registerNum) + '\n')
                                         registerNum+=1
                                         self.Stmt(pos)
-                                        resultList[ifPos]+=(str(registerNum)+'\n')
                                         # resultList[pos] += (', label %' + str(registerNum) + '\n')
                                         # registerNum+=1
                                         return 1
