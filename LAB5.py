@@ -5,6 +5,9 @@ import sys
 tokenList = []
 resultList = []
 ifNotes = 0
+ifDef = 0
+ifConst =0
+ifexp = 0
 SymbolStack = []
 ExpInputStack = []
 registerNum = 1
@@ -26,7 +29,11 @@ def judge_alpha(token):
     global resultList
     global identifierList
     global constNum
+    global ifDef
+    global ifConst
+    global ifexp
     if token == 'int':
+        ifDef =1
         tokenList.append(token)
     elif token == 'main':
         tokenList.append(token)
@@ -34,6 +41,7 @@ def judge_alpha(token):
         tokenList.append(token)
     elif token == 'const':
         constNum += 1
+        ifConst =1
         tokenList.append(token)
     elif token == 'if' or token == 'else':
         tokenList.append(token)
@@ -42,7 +50,7 @@ def judge_alpha(token):
         FuncAppear[pos] = 1
         tokenList.append(token)
     elif token[0] == '_' or token[0].isalpha():
-        if tokenList[-1] == 'int' and not tokenList[-2]=='const':
+        if ifDef ==1 and not ifConst ==1 and not ifexp ==1:
             tmp = identifier()
             tmp.content = token
             identifierList.append(tmp)
@@ -80,6 +88,9 @@ def lexical_analysis(linelist):
     global tokenList
     global resultList
     global ifNotes
+    global ifDef
+    global ifConst
+    global ifexp
     for word in linelist:
         token = ''
         index = 0
@@ -110,6 +121,10 @@ def lexical_analysis(linelist):
                 if index < len(word):
                     while word[index] == ';' or word[index] == '(' or word[index] == ')' or word[index] == '}' or word[
                         index] == '{':
+                        if word[index] == ';' or word[index] == '{':
+                            ifConst =0
+                            ifDef = 0
+                            ifexp =0
                         token = word[index]
                         tokenList.append(token)
                         token = ''
@@ -136,6 +151,14 @@ def lexical_analysis(linelist):
                 token = word[index]
                 tokenList.append(token)
                 token = ''
+                if word[index] == ';' or word[index] == '{':
+                    ifConst = 0
+                    ifDef = 0
+                    ifexp =0
+                if word[index] == '=':
+                    ifexp =1
+                if word[index] == ',':
+                    ifexp = 0
             # 判断是否为逻辑符号
             elif word[index] == '<' or word[index] == '>':
                 token = word[index]
@@ -1186,42 +1209,42 @@ if __name__ == '__main__':
     FuncAppear = [0 for i in range(len(FuncIdent))]
     line = file.readline()
     while line:
-        print(line)
-        # if ifNotes and ('*/' not in line):
-        #     line = file.readline()
-        #     continue
-        # lineList = line.split()
-        # lexical_analysis(lineList)
-        # tokenList.append('\n')
+        # print(line)
+        if ifNotes and ('*/' not in line):
+            line = file.readline()
+            continue
+        lineList = line.split()
+        lexical_analysis(lineList)
+        tokenList.append('\n')
         line = file.readline()
-    # if ifNotes:
-    #     sys.exit(-1)
-    # s_a = syntax_analysis()
-    # s_a.CompUnit()
-    # outFile = open(ir, mode='w')
-    # i = 0
-    # retRes = []
-    # i = 0
-    # ifret = 0
-    # while i<len(resultList):
-    #     if 'ret' in resultList[i]:
-    #         ifret = 1
-    #         retRes.append(resultList[i])
-    #         i+=1
-    #         continue
-    #     if ifret == 1:
-    #         if 'br' in resultList[i]:
-    #             ifret = 0
-    #             i+=1
-    #             continue
-    #         ifret = 0
-    #         retRes.append(resultList[i])
-    #         i+=1
-    #         continue
-    #     retRes.append(resultList[i])
-    #     i+=1
-    #
-    # for sym in retRes:
-    #     outFile.write(sym)
-    # outFile.close()
-    # sys.exit(0)
+    if ifNotes:
+        sys.exit(-1)
+    s_a = syntax_analysis()
+    s_a.CompUnit()
+    outFile = open(ir, mode='w')
+    i = 0
+    retRes = []
+    i = 0
+    ifret = 0
+    while i<len(resultList):
+        if 'ret' in resultList[i]:
+            ifret = 1
+            retRes.append(resultList[i])
+            i+=1
+            continue
+        if ifret == 1:
+            if 'br' in resultList[i]:
+                ifret = 0
+                i+=1
+                continue
+            ifret = 0
+            retRes.append(resultList[i])
+            i+=1
+            continue
+        retRes.append(resultList[i])
+        i+=1
+
+    for sym in retRes:
+        outFile.write(sym)
+    outFile.close()
+    sys.exit(0)
