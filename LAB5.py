@@ -50,7 +50,7 @@ def judge_alpha(token):
         FuncAppear[pos] = 1
         tokenList.append(token)
     elif token[0] == '_' or token[0].isalpha():
-        if ifDef ==1 and not ifConst ==1 and not ifexp ==1:
+        if ifDef ==1 and not ifexp ==1:
             tmp = identifier()
             tmp.content = token
             identifierList.append(tmp)
@@ -715,7 +715,7 @@ class syntax_analysis:
                 # 给变量分配空间
                 i = 1
                 LVarRegister = varStart - constNum
-                while i <= varStart:
+                while i <= varStart+1-constNum:
                     resultList.append('%' + str(i) + ' = alloca i32\n')
                     # identifierList[i].register = '%' + str(registerNum)
                     registerNum += 1
