@@ -18,6 +18,7 @@ FuncIdent = ['getint', 'getch', 'putint', 'putch']
 FuncAppear = []
 CondWaitRegister = []
 curBlockStart = []
+varStart=0
 
 
 def judge_alpha(token):
@@ -41,11 +42,10 @@ def judge_alpha(token):
         FuncAppear[pos] = 1
         tokenList.append(token)
     elif token[0] == '_' or token[0].isalpha():
-        # pos = findIndexByContent(token)
-        # if pos == -1:
-        tmp = identifier()
-        tmp.content = token
-        identifierList.append(tmp)
+        if tokenList[-1] == 'int' and not tokenList[-2]=='const':
+            tmp = identifier()
+            tmp.content = token
+            identifierList.append(tmp)
         tokenList.append(token)
     else:
         sys.exit(-1)
@@ -601,7 +601,11 @@ class syntax_analysis:
             sys.exit(-1)
 
     def CompUnit(self):
+        global varStart
         i = 0
+        varStart = len(identifierList)
+        while self.readSym() and not tokenList[self.tokenIndex] == 'main':
+            self.Decl('global')
         while i < len(FuncAppear):
             if FuncAppear[i] == 1:
                 if FuncIdent[i] == 'putch' or FuncIdent[i] == 'putint':
@@ -609,8 +613,7 @@ class syntax_analysis:
                 else:
                     resultList.append('declare i32 @' + FuncIdent[i] + '()\n')
             i += 1
-        if self.readSym():
-            self.FuncDef()
+        if self.FuncDef():
             return 1
         sys.exit(-1)
 
@@ -648,7 +651,7 @@ class syntax_analysis:
                     sys.exit(-1)
         elif fromRule == 'ConstDef':
             tmp = findIndexByContent(self.sym)
-            if tmp == -1 or tmp <curBlockStart[len(curBlockStart)-1]:
+            if tmp == -1 or len(curBlockStart) == 0 or tmp <curBlockStart[len(curBlockStart)-1]:
                 tmp = identifier()
                 tmp.type = 'const'
                 tmp.content = self.sym
@@ -660,7 +663,7 @@ class syntax_analysis:
                 # return identifierList[tmp]
         elif fromRule == 'VarDef':
             tmp = findIndexByContent(self.sym)
-            if tmp == -1 or tmp <curBlockStart[len(curBlockStart)-1]:
+            if tmp == -1 or len(curBlockStart) == 0 or tmp <curBlockStart[len(curBlockStart)-1]:
                 tmp = identifier()
                 tmp.type = 'LVal'
                 tmp.content = self.sym
@@ -683,19 +686,22 @@ class syntax_analysis:
         global registerNum
         global LVarRegister
         if self.sym == '{':
-            curBlockStart.append(len(identifierList))
 
             if n ==1:
                 resultList.append('{\n')
                 # 给变量分配空间
                 i = 1
-                LVarRegister = len(identifierList) - constNum
-                while i <= len(identifierList) - constNum:
+                LVarRegister = varStart - constNum
+                while i <= varStart:
                     resultList.append('%' + str(i) + ' = alloca i32\n')
                     # identifierList[i].register = '%' + str(registerNum)
                     registerNum += 1
                     i += 1
-                identifierList == []
+                i=0
+                while i<varStart:
+                    identifierList.pop(0)
+                    i+=1
+            curBlockStart.append(len(identifierList))
             if self.readSym():
                 while not self.sym == '}':
                     self.BlockItem()
@@ -721,53 +727,65 @@ class syntax_analysis:
         else:
             return self.Stmt(0)
 
-    def Decl(self):
+    def Decl(self,fromBlock = 'default'):
         if self.sym == 'const':
-            return self.ConstDecl()
+            return self.ConstDecl(fromBlock)
         elif self.sym == 'int':
-            return self.VarDecl()
+            return self.VarDecl(fromBlock)
 
-    def ConstDecl(self):
+    def ConstDecl(self,fromBlock):
         if self.sym == 'const':
             if self.readSym():
                 self.Btype()
                 if self.readSym():
-                    self.ConstDef()
+                    self.ConstDef(fromBlock)
                     while not self.sym == ';':
                         if self.sym == ',':
                             if self.readSym():
-                                self.ConstDef()
+                                self.ConstDef(fromBlock)
                                 continue
                         sys.exit(-1)
                     if self.sym == ';':
                         return 1
 
-    def VarDecl(self):
+    def VarDecl(self,fromBlock):
+        global constNum
         self.Btype()
         if self.readSym():
-            self.VarDef()
+            if fromBlock == 'global':
+                constNum+=1
+            self.VarDef(fromBlock)
             while not self.sym == ';':
                 if self.sym == ',':
                     if self.readSym():
-                        self.VarDef()
+                        self.VarDef(fromBlock)
                         continue
                 sys.exit(-1)
             if self.sym == ';':
                 return 1
 
-    def VarDef(self):
+    def VarDef(self,fromBlock):
         global LVarRegister
         tmp = identifier()
         tmp = self.Ident('VarDef')
-        tmp.register = '%' + str(LVarRegister)
-        LVarRegister -= 1
+        if fromBlock == 'global':
+            tmp.register = '@' +self.sym
+        else:
+            tmp.register = '%' + str(LVarRegister)
+            LVarRegister -= 1
         if self.readSym():
             if self.sym == ',' or self.sym == ';':
+                if fromBlock == 'global':
+                    resultList.append(str(tmp.register)+' = dso_local global i32 0\n')
                 return 1
             elif self.sym == '=':
                 if self.readSym():
-                    storeRegister = self.InitVal().content
-                    resultList.append('store i32 ' + str(storeRegister) + ', i32* ' + tmp.register + '\n')
+                    if fromBlock == 'global':
+                        value = self.ConstInitVal('global')
+                        resultList.append(str(tmp.register)+' = dso_local global i32 '+str(value)+'\n')
+                    else:
+                        storeRegister = self.InitVal().content
+                        resultList.append('store i32 ' + str(storeRegister) + ', i32* ' + tmp.register + '\n')
                     return 1
         sys.exit(-1)
 
@@ -779,21 +797,22 @@ class syntax_analysis:
             return 1
         sys.exit(-1)
 
-    def ConstDef(self):
+    def ConstDef(self,fromBlock):
         tmp = identifier()
         tmp = self.Ident('ConstDef')
         tmp.type = 'ConstVal'
         if self.readSym():
             if self.sym == '=':
                 if self.readSym():
-                    tmp.value = self.ConstInitVal()
+                    tmp.value = self.ConstInitVal(fromBlock)
                     return 1
         return
 
-    def ConstInitVal(self):
-        return self.ConstExp()
+    def ConstInitVal(self,fromblock = 'default'):
+        return self.ConstExp(fromblock)
 
-    def ConstExp(self):
+    def ConstExp(self,fromBlock = 'default'):
+        global registerNum
         while not self.sym == ';' and not self.sym == ',':
             if self.sym[0] == '_' or self.sym[0].isalpha():
                 tmp = findIndexByContent(self.sym)
@@ -804,6 +823,8 @@ class syntax_analysis:
                     if tmpVal.type == 'ConstVal':
                         ExpInputStack.append(str(tmpVal.value))
                     else:
+                        if fromBlock == 'global':
+                            sys.exit(-1)
                         resultList.append('%' + str(registerNum) + ' = load i32, i32* ' + str(tmpVal.register) + '\n')
                         tmpExp = Expression()
                         tmpExp.isregister = True
@@ -1010,7 +1031,7 @@ class syntax_analysis:
                 if self.sym == '(':
                     if self.readSym():
                         res = self.FuncJudgeIfEnd_Exp()
-                        resultList.append('call void @putch(i32 ' + res + ')\n')
+                        resultList.append('call void @putch(i32 ' + res.content + ')\n')
                         if self.sym == ')':
                             if self.readSym():
                                 if self.sym == ';':
