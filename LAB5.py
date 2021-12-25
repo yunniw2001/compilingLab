@@ -17,6 +17,7 @@ LVarRegister = 0
 FuncIdent = ['getint', 'getch', 'putint', 'putch']
 FuncAppear = []
 CondWaitRegister = []
+curBlockStart = []
 
 
 def judge_alpha(token):
@@ -40,11 +41,11 @@ def judge_alpha(token):
         FuncAppear[pos] = 1
         tokenList.append(token)
     elif token[0] == '_' or token[0].isalpha():
-        pos = findIndexByContent(token)
-        if pos == -1:
-            tmp = identifier()
-            tmp.content = token
-            identifierList.append(tmp)
+        # pos = findIndexByContent(token)
+        # if pos == -1:
+        tmp = identifier()
+        tmp.content = token
+        identifierList.append(tmp)
         tokenList.append(token)
     else:
         sys.exit(-1)
@@ -171,11 +172,11 @@ def lexical_analysis(linelist):
 
 def findIndexByContent(content):
     global identifierList
-    i = 0
-    while i < len(identifierList):
+    i = len(identifierList)-1
+    while i >=0 :
         if identifierList[i].content == content:
             return i
-        i += 1
+        i -= 1
     return -1
 
 
@@ -576,6 +577,7 @@ def trans_i32_to_i1(oriRegister):
     res = '%' + str(registerNum)
     registerNum += 1
     return res
+
 class syntax_analysis:
     tokenStream = []
     sym = ''
@@ -636,6 +638,7 @@ class syntax_analysis:
             sys.exit(-1)
 
     def Ident(self, fromRule):
+        global curBlockStart
         if fromRule == 'FuncDef':
             if self.sym == 'main':
                 resultList.append('@main')
@@ -645,18 +648,26 @@ class syntax_analysis:
                     sys.exit(-1)
         elif fromRule == 'ConstDef':
             tmp = findIndexByContent(self.sym)
-            if tmp == -1:
-                sys.exit(-1)
+            if tmp == -1 or tmp <curBlockStart[len(curBlockStart)-1]:
+                tmp = identifier()
+                tmp.type = 'const'
+                tmp.content = self.sym
+                identifierList.append(tmp)
+                return tmp
             else:
-                identifierList[tmp].type = 'const'
-                return identifierList[tmp]
+                sys.exit(-1)
+                # identifierList[tmp].type = 'const'
+                # return identifierList[tmp]
         elif fromRule == 'VarDef':
             tmp = findIndexByContent(self.sym)
-            if tmp == -1:
-                sys.exit(-1)
+            if tmp == -1 or tmp <curBlockStart[len(curBlockStart)-1]:
+                tmp = identifier()
+                tmp.type = 'LVal'
+                tmp.content = self.sym
+                identifierList.append(tmp)
+                return tmp
             else:
-                identifierList[tmp].type = 'LVal'
-                return identifierList[tmp]
+                sys.exit(-1)
         elif fromRule == 'LVal':
             tmp = findIndexByContent(self.sym)
             if tmp == -1:
@@ -672,6 +683,8 @@ class syntax_analysis:
         global registerNum
         global LVarRegister
         if self.sym == '{':
+            curBlockStart.append(len(identifierList))
+
             if n ==1:
                 resultList.append('{\n')
                 # 给变量分配空间
@@ -682,6 +695,7 @@ class syntax_analysis:
                     # identifierList[i].register = '%' + str(registerNum)
                     registerNum += 1
                     i += 1
+                identifierList == []
             if self.readSym():
                 while not self.sym == '}':
                     self.BlockItem()
@@ -689,6 +703,11 @@ class syntax_analysis:
                         continue
                     else:
                         sys.exit(-1)
+                i = len(identifierList)-1
+                while i>=curBlockStart[len(curBlockStart)-1]:
+                    identifierList.pop(i)
+                    i-=1
+                curBlockStart.pop(len(curBlockStart)-1)
                 if n ==1:
                     resultList.append('}')
                 # elif n ==3:
@@ -1138,10 +1157,10 @@ if __name__ == '__main__':
     #     lineList = line.split()
     #     lexicalAnalysis(lineList)
     #     line = file.readline()
-    input = sys.argv[1]
-    ir = sys.argv[2]
-    # input = 'D:\大三上\编译原理\compilingLab\in.txt'
-    # ir = 'D:\大三上\编译原理\compilingLab\out.txt'
+    # input = sys.argv[1]
+    # ir = sys.argv[2]
+    input = 'D:\大三上\编译原理\compilingLab\in.txt'
+    ir = 'D:\大三上\编译原理\compilingLab\out.txt'
     file = open(input)
     FuncAppear = [0 for i in range(len(FuncIdent))]
     line = file.readline()
