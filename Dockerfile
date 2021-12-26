@@ -1,3 +1,3 @@
 FROM python:3
 WORKDIR /app/
-COPY LAB5.py ./
+COPY LAB6.py ./

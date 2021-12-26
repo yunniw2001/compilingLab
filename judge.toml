@@ -1,7 +1,7 @@
-[jobs.lab5]
+[jobs.lab6]
 
 image = { source = "dockerfile", path = "." }
 
 run = [
-  "python LAB5.py $input $ir",
+  "python LAB6.py $input $ir",
 ]
