@@ -917,7 +917,7 @@ class syntax_analysis:
                 resultList.append('br label %'+str(continueBlock[len(continueBlock)-1])+'\n')
                 return 1
             sys.exit(-1)
-        elif self.sym == 'break:':
+        elif self.sym == 'break':
             self.readSym()
             if self.sym == ';':
                 waitBreakBlock.append(len(resultList))
@@ -951,7 +951,7 @@ class syntax_analysis:
                         resultList.append(str(registerNum) + ':\n')
                         i = len(waitBreakBlock) - 1
                         while i>=breakStart:
-                            resultList[waitBreakBlock[-1]].append(str(registerNum)+'\n')
+                            resultList[waitBreakBlock[-1]]+=(str(registerNum)+'\n')
                             waitBreakBlock.pop(-1)
                             i-=1
                         registerNum += 1
