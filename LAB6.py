@@ -1006,10 +1006,12 @@ class syntax_analysis:
                                             ifPos = -1
                                         resultList[pos] += (', label %' + str(registerNum) + '\n')
                                         resultList.append(str(registerNum) + ':\n')
+                                        self.Stmt(pos)
+                                        registerNum-=1
                                         if not ifPos == -1:
                                             resultList[ifPos] += (str(registerNum) + '\n')
-                                        registerNum+=1
-                                        self.Stmt(pos)
+                                        registerNum += 1
+
                                         # resultList[pos] += (', label %' + str(registerNum) + '\n')
                                         # registerNum+=1
                                         return 1
@@ -1268,10 +1270,10 @@ if __name__ == '__main__':
     #     lineList = line.split()
     #     lexicalAnalysis(lineList)
     #     line = file.readline()
-    input = sys.argv[1]
-    ir = sys.argv[2]
-    # input = 'D:\大三上\编译原理\compilingLab\in.txt'
-    # ir = 'D:\大三上\编译原理\compilingLab\out.txt'
+    # input = sys.argv[1]
+    # ir = sys.argv[2]
+    input = 'D:\大三上\编译原理\compilingLab\in.txt'
+    ir = 'D:\大三上\编译原理\compilingLab\out.txt'
     file = open(input)
     FuncAppear = [0 for i in range(len(FuncIdent))]
     line = file.readline()
