@@ -983,22 +983,31 @@ class syntax_analysis:
                                 if self.sym == 'else':
                                     self.readSym()
                                     if not self.sym == 'if':
-                                        resultList.append('br label %')
-                                        ifPos = len(resultList)-1
+                                        if not 'br' in resultList[-1]:
+                                            resultList.append('br label %')
+                                            ifPos = len(resultList) - 1
+                                        else:
+                                            ifPos = -1
                                         resultList[pos]+=(', label %' + str(registerNum) + '\n')
                                         resultList.append(str(registerNum) + ':\n')
                                         registerNum+=1
                                         self.Stmt(ifPos)
-                                        resultList[ifPos]+=(str(registerNum)+'\n')
-                                        resultList.append('br label %'+str(registerNum) + '\n')
+                                        if not ifPos == -1:
+                                            resultList[ifPos]+=(str(registerNum)+'\n')
+                                        if not 'br' in resultList[-1]:
+                                            resultList.append('br label %'+str(registerNum) + '\n')
                                         resultList.append(str(registerNum) + ':\n')
                                         registerNum+=1
                                     elif self.sym == 'if':
-                                        resultList.append('br label %')
-                                        ifPos = len(resultList) - 1
+                                        if not 'br' in resultList[-1]:
+                                            resultList.append('br label %')
+                                            ifPos = len(resultList) - 1
+                                        else:
+                                            ifPos = -1
                                         resultList[pos] += (', label %' + str(registerNum) + '\n')
                                         resultList.append(str(registerNum) + ':\n')
-                                        resultList[ifPos] += (str(registerNum) + '\n')
+                                        if not ifPos == -1:
+                                            resultList[ifPos] += (str(registerNum) + '\n')
                                         registerNum+=1
                                         self.Stmt(pos)
                                         # resultList[pos] += (', label %' + str(registerNum) + '\n')
@@ -1267,42 +1276,42 @@ if __name__ == '__main__':
     FuncAppear = [0 for i in range(len(FuncIdent))]
     line = file.readline()
     while line:
-        print(line)
-    #     if ifNotes and ('*/' not in line):
-    #         line = file.readline()
-    #         continue
-    #     lineList = line.split()
-    #     lexical_analysis(lineList)
-    #     tokenList.append('\n')
+        # print(line)
+        if ifNotes and ('*/' not in line):
+            line = file.readline()
+            continue
+        lineList = line.split()
+        lexical_analysis(lineList)
+        tokenList.append('\n')
         line = file.readline()
-    # if ifNotes:
-    #     sys.exit(-1)
-    # s_a = syntax_analysis()
-    # s_a.CompUnit()
-    # outFile = open(ir, mode='w')
-    # i = 0
-    # retRes = []
-    # i = 0
-    # ifret = 0
-    # while i<len(resultList):
-    #     if 'ret' in resultList[i]:
-    #         ifret = 1
-    #         retRes.append(resultList[i])
-    #         i+=1
-    #         continue
-    #     if ifret == 1:
-    #         if 'br' in resultList[i]:
-    #             ifret = 0
-    #             i+=1
-    #             continue
-    #         ifret = 0
-    #         retRes.append(resultList[i])
-    #         i+=1
-    #         continue
-    #     retRes.append(resultList[i])
-    #     i+=1
-    #
-    # for sym in retRes:
-    #     outFile.write(sym)
-    # outFile.close()
-    # sys.exit(0)
+    if ifNotes:
+        sys.exit(-1)
+    s_a = syntax_analysis()
+    s_a.CompUnit()
+    outFile = open(ir, mode='w')
+    i = 0
+    retRes = []
+    i = 0
+    ifret = 0
+    while i<len(resultList):
+        if 'ret' in resultList[i]:
+            ifret = 1
+            retRes.append(resultList[i])
+            i+=1
+            continue
+        if ifret == 1:
+            if 'br' in resultList[i]:
+                ifret = 0
+                i+=1
+                continue
+            ifret = 0
+            retRes.append(resultList[i])
+            i+=1
+            continue
+        retRes.append(resultList[i])
+        i+=1
+
+    for sym in retRes:
+        outFile.write(sym)
+    outFile.close()
+    sys.exit(0)

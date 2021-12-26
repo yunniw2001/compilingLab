@@ -1,52 +1,110 @@
+declare i32 @getch()
+declare void @putint(i32)
 declare void @putch(i32)
 define dso_local i32 @main(){
 %1 = alloca i32
 %2 = alloca i32
 %3 = alloca i32
-store i32 1, i32* %2
+store i32 0, i32* %2
 br label %4
 4:
-%5 = load i32, i32* %2
-%6 = icmp slt i32 %5, 12
-br i1 %6,label %7, label %30
-7:
-store i32 0, i32* %1
-br label %8
-8:
-%9 = icmp eq i32 1, 1
-br i1 %9,label %10, label %27
-10:
-%11 = load i32, i32* %1
-%12 = srem i32 %11, 3
-%13 = icmp eq i32 %12, 1
-br i1 %13,label %14, label %16
-14:
-%15 = add i32 48, 1
-call void @putch(i32 %15)
-br label %17
-16:
-call void @putch(i32 48)
-br label %17
-17:
-%18 = load i32, i32* %1
-%19 = add i32 %18, 1
-store i32 %19, i32* %1
-%20 = load i32, i32* %1
-%21 = load i32, i32* %2
-%22 = mul i32 2, %21
-%23 = sub i32 %22, 1
-%24 = icmp sge i32 %20, %23
-br i1 %24,label %25, label %26
-25:
-br label %26
-26:
-br label %8
-27:
-call void @putch(i32 10)
-%28 = load i32, i32* %2
-%29 = add i32 %28, 1
-store i32 %29, i32* %2
+br i1 1,label %5, label %16
+5:
+%6 = call i32 @getch()
+%7 = sub i32 %6, 48
+store i32 %7, i32* %1
+%8 = load i32, i32* %1
+%9 = load i32, i32* %1
+%10 = icmp slt i32 %8, 0
+%11 = icmp sgt i32 %9, 9
+%12 = or i1 %10,%11
+br i1 %12,label %13, label %14
+13:
 br label %4
-30:
+14:
+br label %15
+15:
+br label %4
+16:
+%17 = load i32, i32* %1
+store i32 %17, i32* %2
+br label %18
+18:
+br i1 1,label %19, label %34
+19:
+%20 = call i32 @getch()
+%21 = sub i32 %20, 48
+store i32 %21, i32* %1
+%22 = load i32, i32* %1
+%23 = load i32, i32* %1
+%24 = icmp sge i32 %22, 0
+%25 = icmp sle i32 %23, 9
+%26 = and i1 %24,%25
+br i1 %26,label %27, label %32
+27:
+%28 = load i32, i32* %2
+%29 = load i32, i32* %1
+%30 = mul i32 %28, 10
+%31 = add i32 %30, %29
+store i32 %31, i32* %2
+br label %33
+32:
+br label %33
+33:
+br label %18
+34:
+%35 = load i32, i32* %2
+call void @putint(i32 %35)
+call void @putch(i32 10)
+store i32 0, i32* %2
+br label %36
+36:
+br i1 1,label %37, label %48
+37:
+%38 = call i32 @getch()
+%39 = sub i32 %38, 48
+store i32 %39, i32* %1
+%40 = load i32, i32* %1
+%41 = load i32, i32* %1
+%42 = icmp slt i32 %40, 0
+%43 = icmp sgt i32 %41, 9
+%44 = or i1 %42,%43
+br i1 %44,label %45, label %46
+45:
+br label %36
+46:
+br label %47
+47:
+br label %36
+48:
+%49 = load i32, i32* %1
+store i32 %49, i32* %2
+br label %50
+50:
+br i1 1,label %51, label %66
+51:
+%52 = call i32 @getch()
+%53 = sub i32 %52, 48
+store i32 %53, i32* %1
+%54 = load i32, i32* %1
+%55 = load i32, i32* %1
+%56 = icmp sge i32 %54, 0
+%57 = icmp sle i32 %55, 9
+%58 = and i1 %56,%57
+br i1 %58,label %59, label %64
+59:
+%60 = load i32, i32* %2
+%61 = load i32, i32* %1
+%62 = mul i32 %60, 10
+%63 = add i32 %62, %61
+store i32 %63, i32* %2
+br label %65
+64:
+br label %65
+65:
+br label %50
+66:
+%67 = load i32, i32* %2
+call void @putint(i32 %67)
 ret i32 0
 }
