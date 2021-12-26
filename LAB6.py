@@ -1006,6 +1006,7 @@ class syntax_analysis:
                                             ifPos = -1
                                         resultList[pos] += (', label %' + str(registerNum) + '\n')
                                         resultList.append(str(registerNum) + ':\n')
+                                        registerNum+=1
                                         self.Stmt(pos)
                                         registerNum-=1
                                         if not ifPos == -1:
