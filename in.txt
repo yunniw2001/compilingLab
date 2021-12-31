@@ -1,35 +1,7 @@
+const int c[2][1] = {{1}, {3}};
+int b[2][3] = {{1}}, e[4][4];
+int d[5], a[3] = {1, 2};
 int main() {
-    int instruction, low, high, mid, count;
-    count = getint();
-    while (count > 0) {
-        low   = getint();
-        high  = getint();
-        count = count - 1;
-        while (1) {
-            mid         = (low + high + 1) / 2;
-            instruction = getint();
-            if (instruction == 0) {
-                break;
-            } else if (instruction == 1) {
-                high = mid;
-            } else if (instruction == 2) {
-                low = mid;
-            } else {
-                putch(69);
-                putch(10);
-                continue;
-            }
-            if (low == high) {
-                putch(67);
-                putch(10);
-                break;
-            }
-            putint(mid);
-            putch(10);
-        }
-        putint(mid);
-        putch(10);
-        putch(10);
-    }
+    putint(c[1][0] + b[0][0] + c[0][0] + a[1] + d[4]);
     return 0;
 }
