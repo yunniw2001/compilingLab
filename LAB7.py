@@ -948,6 +948,8 @@ class syntax_analysis:
                     tmpDimArray.append(tmpDim)
                     self.readSym()
                 tmpArray.dim = tmpDimArray
+                tmpArray.curElem = [0 for i in range(len(tmpArray.dim))]
+                tmpArray.value = [0 for i in range(tmpArray.getTotalLength())]
                 if not fromBlock == 'global':
                     resultList.append('%' + str(registerNum) + ' = getelementptr [' + str(
                         tmpArray.getTotalLength()) + ' x i32], [' + str(
@@ -1007,7 +1009,7 @@ class syntax_analysis:
                         self.readSym()
                         self.VarDef('global')
                         return 1
-                else:
+                elif fromBlock == 'global':
                     tmpArray.curElem = [0 for i in range(len(tmpArray.dim))]
                     tmpArray.value = [0 for i in range(tmpArray.getTotalLength())]
                     resultList.append(str(tmpArray.register)+' = dso_local global ['+str(tmpArray.getTotalLength())+' x i32] zeroinitializer\n')
@@ -1017,6 +1019,12 @@ class syntax_analysis:
                         return 1
                     elif self.sym == ';':
                         return 1
+                elif self.sym == ',':
+                    self.readSym()
+                    self.VarDef()
+                    return 1
+                elif self.sym == ';':
+                    return 1
 
         sys.exit(-1)
 
