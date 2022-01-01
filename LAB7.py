@@ -1503,6 +1503,8 @@ class syntax_analysis:
                             i = 0
                             ExpInputStack = []
                             self.readSym()
+                            if not self.sym == '[':
+                                sys.exit(-1)
                             while self.sym == '[':
                                 self.readSym()
                                 tmp_Array.curElem[i] = self.Exp()
