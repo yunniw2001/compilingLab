@@ -69,10 +69,6 @@ def judge_alpha(token):
                 tmp = My_array()
                 tmp.content = name
                 arrayList.append(tmp)
-                tmp = identifier()
-                tmp.content = name
-                tmp.type = 'array'
-                identifierList.append(tmp)
             tokenList.append(name)
             tokenList.append('[')
     else:
@@ -111,9 +107,7 @@ def lexical_analysis(linelist):
     global ifDef
     global ifConst
     global ifexp
-    m = 0
-    while m <len(linelist):
-        word = linelist[m]
+    for word in linelist:
         token = ''
         index = 0
         while index < len(word):
@@ -140,13 +134,7 @@ def lexical_analysis(linelist):
                         if index<len(word) and word[index] == '[':
                             token+=word[index]
                             index+=1
-                        if index>=len(word) and m <len(linelist)-1 and linelist[m+1][0] == '[':
-                            token +='['
-                            index = 1
-                            m+=1
-                            word = linelist[m]
                         break
-
                 judge_alpha(token)
                 token = ''
                 if index < len(word):
@@ -222,7 +210,6 @@ def lexical_analysis(linelist):
             else:
                 sys.exit(-1)
             index += 1
-        m+=1
 
 
 def findIndexByContent(content):
@@ -714,33 +701,22 @@ class syntax_analysis:
         if self.tokenIndex < len(self.tokenStream):
             self.sym = self.tokenStream[self.tokenIndex]
             self.tokenIndex += 1
+
             while self.sym == '\n' and self.tokenIndex < len(self.tokenStream):
                 self.sym = self.tokenStream[self.tokenIndex]
                 self.tokenIndex += 1
             return True
         else:
-            sys.exit(-1)
+            return False
 
     def CompUnit(self):
-        global varStart
-        i = 0
-        varStart = len(identifierList)
-        while self.readSym() and not tokenList[self.tokenIndex] == 'main':
-            self.Decl('global')
-        # 调用六个函数
-        while i < len(FuncAppear):
-            if FuncAppear[i] == 1:
-                if FuncIdent[i] == 'putch' or FuncIdent[i] == 'putint':
-                    resultList.append('declare void @' + FuncIdent[i] + '(i32)\n')
-                else:
-                    resultList.append('declare i32 @' + FuncIdent[i] + '()\n')
-            i += 1
-        # 如果出现了数组，调用memset
-        if len(arrayList)>0:
-            resultList.append('declare void @memset(i32*, i32, i32)\n')
-        if self.FuncDef():
-            return 1
-        sys.exit(-1)
+        while self.readSym():
+            resultList.append(self.sym)
+            if not self.sym in ['(',')','[',']']:
+                resultList.append(' ')
+            if self.sym in [';','{','}']:
+                resultList.append('\n')
+        return 1
 
     def FuncDef(self):
         self.FuncType()
@@ -823,7 +799,7 @@ class syntax_analysis:
                 resultList.append('{\n')
                 # 给变量分配空间
                 i = 1
-                LVarRegister = varStart - constNum+1
+                LVarRegister = varStart - constNum+3
                 while i <= varStart+1-constNum:
                     resultList.append('%' + str(i) + ' = alloca i32\n')
                     # identifierList[i].register = '%' + str(registerNum)
@@ -1664,10 +1640,10 @@ if __name__ == '__main__':
     #     lineList = line.split()
     #     lexicalAnalysis(lineList)
     #     line = file.readline()
-    input = sys.argv[1]
-    ir = sys.argv[2]
-    # input = 'D:\大三上\编译原理\compilingLab\in.txt'
-    # ir = 'D:\大三上\编译原理\compilingLab\out.txt'
+    # input = sys.argv[1]
+    # ir = sys.argv[2]
+    input = 'D:\大三上\编译原理\compilingLab\in.txt'
+    ir = 'D:\大三上\编译原理\compilingLab\out.txt'
     file = open(input)
     FuncAppear = [0 for i in range(len(FuncIdent))]
     line = file.readline()
