@@ -23,7 +23,14 @@ int main() {
     k        = j[1];
 
     j[2]     = 16;
-
+    putint(field[0]);
+    putch(10);
+    putint(j[3-field[0]]);
+    putch(10);
+    putint(j[0]);
+    putch(10);
+    putint(j[1]);
+    putch(10);
 
 
     putint(j[3 - field[0]] + 2 + k);
