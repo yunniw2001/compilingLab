@@ -229,7 +229,19 @@ def finArrayIndexByContent(content):
             return i
         i += 1
     return -1
-
+def getLocalArrayIndexByContent(content):
+    global arrayList
+    i = 0
+    while i<len(arrayList):
+        if arrayList[i].content == content and not arrayList[i].area == 'global':
+            return i
+        i+=1
+    i = 0
+    while i<len(arrayList):
+        if arrayList[i].content == content:
+            return i
+        i+=1
+    return -1
 class Expression:
     isregister = False
     content = ''
@@ -754,7 +766,7 @@ class syntax_analysis:
                 tmp.content = self.sym
                 if tokenList[self.tokenIndex] == '[':
                     tmp.type = 'array'
-                    tmp.toMyArray = arrayList[finArrayIndexByContent(self.sym)]
+                    tmp.toMyArray = arrayList[getLocalArrayIndexByContent(self.sym)]
                 identifierList.append(tmp)
                 return tmp
             else:
@@ -928,17 +940,18 @@ class syntax_analysis:
                             tmpArray.curElem[-1] = 0
 
                         #resultList.append('%'+str(registerNum)+' = getelementptr i32, i32* '+tmpArray.register+', i32 '+str(tmpArray.getCurLength('def'))+'\n')
-                        if not fromBlock == 'global':
-                            value = self.InitVal()
-                            resultList.append('%' + str(registerNum) + ' = getelementptr [' + str(
-                                tmpArray.getTotalLength()) + ' x i32], [' + str(
-                                tmpArray.getTotalLength()) + ' x i32]* ' + str(tmpArray.register) + ', i32 0, i32 ' + str(
-                                tmpArray.getCurLength('def')) + '\n')
-                            resultList.append('store i32 '+str(value.content)+', i32* %'+str(registerNum)+'\n')
-                            registerNum+=1
-                        else:
-                            value = self.ConstInitVal('global')
-                            tmpArray.value[tmpArray.getCurLength('def')] = value
+                        if not self.sym == '}':
+                            if not fromBlock == 'global':
+                                value = self.InitVal()
+                                resultList.append('%' + str(registerNum) + ' = getelementptr [' + str(
+                                    tmpArray.getTotalLength()) + ' x i32], [' + str(
+                                    tmpArray.getTotalLength()) + ' x i32]* ' + str(tmpArray.register) + ', i32 0, i32 ' + str(
+                                    tmpArray.getCurLength('def')) + '\n')
+                                resultList.append('store i32 '+str(value.content)+', i32* %'+str(registerNum)+'\n')
+                                registerNum+=1
+                            else:
+                                value = self.ConstInitVal('global')
+                                tmpArray.value[tmpArray.getCurLength('def')] = value
                         while self.sym == '}':
                             waitRight-=1
                             self.readSym()
@@ -1009,7 +1022,7 @@ class syntax_analysis:
                     self.readSym()
                     tmpArray.curElem =  [0 for i in range(len(tmpArray.dim))]
                     waitRight = 0
-                    while not self.sym == ';' and not (waitRight == 0 and self.sym == ','):
+                    while not self.sym == ';' and not (waitRight == 0 and self.sym == ',' and len(tmpArray.dim)>1):
                         self.readSym()
                         i = 0
                         while self.sym == '{':
@@ -1017,11 +1030,15 @@ class syntax_analysis:
                             tmpArray.curElem[i] += 1
                             i += 1
                             self.readSym()
-                            if self.sym == '}':
-                                waitRight-=1
-                            tmpArray.curElem[-1] = 0
-                            value = self.ConstInitVal()
-                            tmpArray.value[tmpArray.getCurLength('def')] = value
+                        while self.sym == '}':
+                            waitRight -= 1
+                            self.readSym()
+                        if self.sym == ';':
+                            break
+                        value = self.ConstInitVal()
+                        tmpArray.value[tmpArray.getCurLength('def')] = value
+                        if self.sym == ',':
+                            tmpArray.curElem[len(tmpArray.dim) - 1] += 1
                     if fromBlock == 'global':
                         tmpArray.area = 'global'
                         tmpArray.register = '@'+tmpArray.content
@@ -1564,40 +1581,40 @@ if __name__ == '__main__':
     FuncAppear = [0 for i in range(len(FuncIdent))]
     line = file.readline()
     while line:
-        print(line)
-        # if ifNotes and ('*/' not in line):
-        #     line = file.readline()
-        #     continue
-        # lineList = line.split()
-        # lexical_analysis(lineList)
-        # tokenList.append('\n')
+        # print(line)
+        if ifNotes and ('*/' not in line):
+            line = file.readline()
+            continue
+        lineList = line.split()
+        lexical_analysis(lineList)
+        tokenList.append('\n')
         line = file.readline()
-    # if ifNotes:
-    #     sys.exit(-1)
-    # s_a = syntax_analysis()
-    # s_a.CompUnit()
-    # outFile = open(ir, mode='w')
-    # i = 0
-    # retRes = []
-    # i = 0
-    # ifret = 0
-    # while i<len(resultList):
-    #     if 'ret' in resultList[i]:
-    #         ifret = 1
-    #         retRes.append(resultList[i])
-    #         i+=1
-    #         continue
-    #     if ifret == 1:
-    #         if 'br' in resultList[i]:
-    #             ifret = 0
-    #             i+=1
-    #             continue
-    #         ifret = 0
-    #         retRes.append(resultList[i])
-    #         i+=1
-    #         continue
-    #     retRes.append(resultList[i])
-    #     i+=1
+    if ifNotes:
+        sys.exit(-1)
+    s_a = syntax_analysis()
+    s_a.CompUnit()
+    outFile = open(ir, mode='w')
+    i = 0
+    retRes = []
+    i = 0
+    ifret = 0
+    while i<len(resultList):
+        if 'ret' in resultList[i]:
+            ifret = 1
+            retRes.append(resultList[i])
+            i+=1
+            continue
+        if ifret == 1:
+            if 'br' in resultList[i]:
+                ifret = 0
+                i+=1
+                continue
+            ifret = 0
+            retRes.append(resultList[i])
+            i+=1
+            continue
+        retRes.append(resultList[i])
+        i+=1
 
     for sym in retRes:
         outFile.write(sym)
