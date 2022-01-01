@@ -791,7 +791,7 @@ class syntax_analysis:
                 resultList.append('{\n')
                 # 给变量分配空间
                 i = 1
-                LVarRegister = varStart - constNum
+                LVarRegister = varStart - constNum+1
                 while i <= varStart+1-constNum:
                     resultList.append('%' + str(i) + ' = alloca i32\n')
                     # identifierList[i].register = '%' + str(registerNum)
@@ -1124,8 +1124,8 @@ class syntax_analysis:
                     return 1
         elif (self.sym[0] == '_' or self.sym[0].isalpha()) and self.sym not in FuncIdent and not self.sym == 'if' and not self.sym == 'else' and not self.sym in ['while','continue','break']:
             tmpLVar = self.LVal()
-            if not tmpLVar.type == 'LVal':
-                sys.exit(-1)
+            # if not tmpLVar.type == 'LVal' and not :
+            #     sys.exit(-1)
             if self.readSym():
                 if self.sym == '=':
                     if self.readSym():
