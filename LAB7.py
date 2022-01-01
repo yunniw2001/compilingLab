@@ -393,7 +393,7 @@ class Operator_precedence:
                                     num = trans_i1_to_i32(num)
                             else:
                                 num = SymbolStack[-1]
-                            if SymbolStack[-2] == '-':
+                            if SymbolStack[stackTop] == '-':
                                 self.single_operator(SymbolStack[stackTop], num)
                                 tmp = Expression()
                                 tmp.content = '%' + str(registerNum)
@@ -516,6 +516,11 @@ class Operator_precedence:
                     continue
                 if isinstance(SymbolStack[-1], Expression):
                     stackTop = -2
+                    if SymbolStack[stackTop] == input_symbol and input_symbol == '#':
+                        returnRes = SymbolStack[-1].res
+                        ExpInputStack = []
+                        SymbolStack = []
+                        return returnRes
                     priority = self.judgePriority(SymbolStack[-2], input_symbol, -2)
                 else:
                     stackTop = -1
@@ -566,11 +571,17 @@ class Operator_precedence:
                                 num = SymbolStack[-1].res
                             else:
                                 num = int(SymbolStack[-1])
-                            if SymbolStack[-2] == '-':
+                            if SymbolStack[stackTop] == '-':
                                 SymbolStack.pop()
                                 SymbolStack.pop()
                                 tmp = Expression()
                                 tmp.res = 0 - num
+                                SymbolStack.append(tmp)
+                            elif SymbolStack[-2] == '#' and SymbolStack[-1] == '-':
+                                SymbolStack.pop()
+                                SymbolStack.pop()
+                                tmp = Expression()
+                                tmp.res = 0-num
                                 SymbolStack.append(tmp)
                             else:
                                 tmp = SymbolStack[-1]
@@ -1113,7 +1124,11 @@ class syntax_analysis:
                 else:
                     tmpVal = identifierList[tmp]
                     if tmpVal.type == 'ConstVal':
-                        ExpInputStack.append(str(tmpVal.value))
+                        if tmpVal.value<0:
+                            ExpInputStack.append('-')
+                            ExpInputStack.append(str(0-tmpVal.value))
+                        else:
+                            ExpInputStack.append(str(tmpVal.value))
                     else:
                         if fromBlock == 'global':
                             sys.exit(-1)
