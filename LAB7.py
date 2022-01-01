@@ -1376,7 +1376,7 @@ class syntax_analysis:
                             self.readSym()
                             while self.sym == '[':
                                 self.readSym()
-                                tmpArray.curElem[i] = self.ConstExp()
+                                tmpArray.curElem[i] = self.Exp()
                                 i+=1
                                 self.readSym()
                             ExpInputStack = saveExp
