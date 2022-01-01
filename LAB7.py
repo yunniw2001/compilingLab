@@ -846,7 +846,7 @@ class syntax_analysis:
                     i+=1
             curBlockStart.append(len(identifierList))
             i = 0
-            while i < len(arrayList):
+            while i < len(arrayList) and n==1:
                 if not arrayList[i].area == 'global':
                     resultList.append('%' + str(registerNum) + ' = alloca ')
                     arrayList[i].register = '%' + str(registerNum)
