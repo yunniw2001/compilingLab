@@ -17,8 +17,11 @@ int main() {
             if (j < 4 && i - j < 3) {
 
                 a[i - j][j] = cnt;
-
                 cnt         = cnt + 1;
+                putint(a[i-j][j]);
+                putch(10);
+                putch(10);
+
 
             }
 

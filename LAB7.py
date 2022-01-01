@@ -263,17 +263,36 @@ class My_array:
             res*=dims
         return res
     def getCurLength(self,type = 'call'):
+        global ExpInputStack
         i = 0
         res= 0
         if type == 'def':
             while i < len(self.dim)-1:
                 res+=((self.curElem[i]-1)*self.dim[len(self.dim)-1-i])
                 i+=1
+            return res + self.curElem[-1]
         else:
+            saveStack = copy.deepcopy(ExpInputStack)
+            ExpInputStack = []
             while i < len(self.dim)-1:
-                res+=(self.curElem[i]*self.dim[len(self.dim)-1-i])
+                # ExpInputStack.append(self.curElem[i]*self.dim[len(self.dim)-1-i])
+                if isinstance(self.curElem[i],Expression):
+                    ExpInputStack.append(self.curElem[i])
+                else:
+                    ExpInputStack.append(str(self.curElem[i]))
+                ExpInputStack.append('*')
+                ExpInputStack.append(str(self.dim[len(self.dim)-1-i]))
+                ExpInputStack.append('+')
                 i+=1
-        return res+self.curElem[-1]
+            if isinstance(self.curElem[-1],Expression):
+                ExpInputStack.append(self.curElem[-1])
+            else:
+                ExpInputStack.append(str(self.curElem[-1]))
+            o_p = Operator_precedence()
+            res = o_p.Operator_precedence_grammar('LVal')
+            ExpInputStack = copy.deepcopy(saveStack)
+            return res
+
 
 
 class identifier:
@@ -1133,6 +1152,27 @@ class syntax_analysis:
                         if self.sym == ';':
                             resultList.append('store i32 ' + str(tmp.content) + ', i32* ' + tmpLVar.register + '\n')
                             return 1
+                elif self.sym == '[':
+                    tmpArray = tmpLVar.toMyArray
+                    i=0
+                    while not (self.sym == ',' or self.sym == ';' or self.sym == '='):
+                        self.readSym()
+                        tmpDim = self.Exp()
+                        tmpArray.curElem[i] = tmpDim
+                        i+=1
+                        self.readSym()
+                    if self.sym == '=':
+                        self.readSym()
+                        res = self.Exp()
+                        pos =tmpArray.getCurLength('call').content
+                        resultList.append('%' + str(registerNum) + ' = getelementptr [' + str(
+                            tmpArray.getTotalLength()) + ' x i32], [' + str(
+                            tmpArray.getTotalLength()) + ' x i32]* ' + str(
+                            tmpArray.register) + ', i32 0, i32 ' + str(pos) + '\n')
+                        # resultList.append('%' + str(registerNum + 1) + ' = load i32, i32* %' + str(registerNum) + '\n')
+                        # registerNum += 1
+                        resultList.append('store i32 ' + str(res.content) + ', i32* %' + str(registerNum) + '\n')
+                        registerNum+=1
         elif self.sym in FuncIdent:
             self.Func()
         elif self.sym == 'continue':
@@ -1319,10 +1359,11 @@ class syntax_analysis:
                             ExpInputStack = saveExp
                             # resultList.append('%' + str(registerNum) + ' = getelementptr i32, i32* ' + str(
                             #     tmpArray.register) + ', i32 ' + str(tmpArray.getCurLength('call')) + '\n')
+                            pos = tmpArray.getCurLength('call').content
                             resultList.append('%' + str(registerNum) + ' = getelementptr [' + str(
                                 tmpArray.getTotalLength()) + ' x i32], [' + str(
                                 tmpArray.getTotalLength()) + ' x i32]* ' + str(
-                                tmpArray.register) + ', i32 0, i32 ' + str(tmpArray.getCurLength('call')) + '\n')
+                                tmpArray.register) + ', i32 0, i32 ' + str(pos) + '\n')
                             resultList.append('%'+str(registerNum+1)+' = load i32, i32* %'+str(registerNum)+'\n')
                             registerNum+=1
                             tmpExp = Expression()
@@ -1426,13 +1467,14 @@ class syntax_analysis:
                             self.readSym()
                             while self.sym == '[':
                                 self.readSym()
-                                tmp_Array.curElem[i] = self.ConstExp()
+                                tmp_Array.curElem[i] = self.Exp()
                                 i += 1
                                 self.readSym()
                             ExpInputStack = copy.deepcopy(saveExp)
                             # resultList.append('%' + str(registerNum) + ' = getelementptr i32, i32* ' + str(
                             #     tmpArray.register) + ', i32 ' + str(tmpArray.getCurLength('call')) + '\n')
-                            resultList.append('%' + str(registerNum) + ' = getelementptr ['+str(tmp_Array.getTotalLength())+' x i32], ['+str(tmp_Array.getTotalLength())+' x i32]* '+str(tmp_Array.register)+', i32 0, i32 '+str(tmp_Array.getCurLength('call')) + '\n')
+                            pos =tmp_Array.getCurLength('call').content
+                            resultList.append('%' + str(registerNum) + ' = getelementptr ['+str(tmp_Array.getTotalLength())+' x i32], ['+str(tmp_Array.getTotalLength())+' x i32]* '+str(tmp_Array.register)+', i32 0, i32 '+str(pos) + '\n')
                             resultList.append(
                                 '%' + str(registerNum + 1) + ' = load i32, i32* %' + str(registerNum) + '\n')
                             registerNum += 1
