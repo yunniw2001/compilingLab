@@ -921,7 +921,7 @@ class syntax_analysis:
                         tmpArray.getTotalLength()) + ' x i32], [' + str(
                         tmpArray.getTotalLength()) + ' x i32]* ' + str(
                         tmpArray.register) + ', i32 0, i32 0\n')
-                    resultList.append('call void @memset(i32* %'+str(registerNum)+', i32 0, i32 '+str(tmpArray.getTotalLength())+')\n')
+                    resultList.append('call void @memset(i32* %'+str(registerNum)+', i32 0, i32 '+str(tmpArray.getTotalLength()*4)+')\n')
                     registerNum+=1
                     resultList[tmpArray.defPos]+=('['+str(tmpArray.getTotalLength())+' x i32]\n')
                 if self.sym == '=':
