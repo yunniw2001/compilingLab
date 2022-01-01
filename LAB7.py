@@ -1678,6 +1678,7 @@ if __name__ == '__main__':
     # ir = 'D:\大三上\编译原理\compilingLab\out.txt'
     file = open(input)
     FuncAppear = [0 for i in range(len(FuncIdent))]
+    print(input)
     line = file.readline()
     while line:
         # print(line)
