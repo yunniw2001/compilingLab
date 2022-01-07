@@ -1,137 +1,14 @@
-declare i32 @getint()
 declare void @putint(i32)
 declare void @memset(i32*, i32, i32)
-define dso_local i32 @func1(i32 %0, i32 %1, i32 %2){
+define dso_local i32 @_getMaxOfAll(i32* %0, i32 %1){
+%3 = alloca i32
 %4 = alloca i32
 %5 = alloca i32
-%6 = alloca i32
-%7 = alloca i32
+%6 = alloca i32*
+store i32*  %0, i32* * %6
+%7 = load i32*, i32* * %6
 %8 = alloca i32
-store i32  %0, i32* %8
-%9 = alloca i32
-store i32  %1, i32* %9
-%10 = alloca i32
-store i32  %2, i32* %10
-%11 = load i32, i32* %10
-%12 = icmp eq i32 %11, 0
-br i1 %12,label %13, label %17
-13:
-%14 = load i32, i32* %8
-%15 = load i32, i32* %9
-%16 = mul i32 %14, %15
-ret i32 %16
-17:
-%18 = load i32, i32* %8
-%19 = load i32, i32* %9
-%20 = load i32, i32* %10
-%21 = sub i32 %19, %20
-%22 = call i32 @func1(i32 %18, i32 %21, i32 0)
-ret i32 %22
-}
-define dso_local i32 @func2(i32 %0, i32 %1){
-%3 = alloca i32
-%4 = alloca i32
-%5 = alloca i32
-%6 = alloca i32
-store i32  %0, i32* %6
-%7 = alloca i32
-store i32  %1, i32* %7
-%8 = load i32, i32* %7
-%9 = icmp ne i32 %8, 0
-br i1 %9,label %10, label %15
-10:
-%11 = load i32, i32* %6
-%12 = load i32, i32* %7
-%13 = srem i32 %11, %12
-%14 = call i32 @func2(i32 %13, i32 0)
-ret i32 %14
-15:
-%16 = load i32, i32* %6
-ret i32 %16
-}
-define dso_local i32 @func3(i32 %0, i32 %1){
-%3 = alloca i32
-%4 = alloca i32
-%5 = alloca i32
-%6 = alloca i32
-store i32  %0, i32* %6
-%7 = alloca i32
-store i32  %1, i32* %7
-%8 = load i32, i32* %7
-%9 = icmp eq i32 %8, 0
-br i1 %9,label %10, label %13
-10:
-%11 = load i32, i32* %6
-%12 = add i32 %11, 1
-ret i32 %12
-13:
-%14 = load i32, i32* %6
-%15 = load i32, i32* %7
-%16 = add i32 %14, %15
-%17 = call i32 @func3(i32 %16, i32 0)
-ret i32 %17
-}
-define dso_local i32 @func4(i32 %0, i32 %1, i32 %2){
-%4 = alloca i32
-%5 = alloca i32
-%6 = alloca i32
-%7 = alloca i32
-%8 = alloca i32
-store i32  %0, i32* %8
-%9 = alloca i32
-store i32  %1, i32* %9
-%10 = alloca i32
-store i32  %2, i32* %10
-%11 = load i32, i32* %8
-%12 = icmp ne i32 %11, 0
-br i1 %12,label %13, label %15
-13:
-%14 = load i32, i32* %9
-ret i32 %14
-15:
-%16 = load i32, i32* %10
-ret i32 %16
-}
-define dso_local i32 @func5(i32 %0){
-%2 = alloca i32
-%3 = alloca i32
-%4 = alloca i32
-store i32  %0, i32* %4
-%5 = load i32, i32* %4
-%6 = sub i32 0, %5
-ret i32 %6
-}
-define dso_local i32 @func6(i32 %0, i32 %1){
-%3 = alloca i32
-%4 = alloca i32
-%5 = alloca i32
-%6 = alloca i32
-store i32  %0, i32* %6
-%7 = alloca i32
-store i32  %1, i32* %7
-%8 = load i32, i32* %6
-%9 = load i32, i32* %7
-%10 = icmp ne i32 %8, 0
-%11 = icmp ne i32 %9, 0
-%12 = and i1 %10,%11
-br i1 %12,label %13, label %14
-13:
-ret i32 1
-14:
-ret i32 0
-}
-define dso_local i32 @func7(i32 %0){
-%2 = alloca i32
-%3 = alloca i32
-%4 = alloca i32
-store i32  %0, i32* %4
-%5 = load i32, i32* %4
-%6 = icmp ne i32 %5, 0
-%7 = xor i1 %6, true
-br i1 %7,label %8, label %9
-8:
-ret i32 1
-9:
+store i32  %1, i32* %8
 ret i32 0
 }
 define dso_local i32 @main(){
@@ -139,122 +16,23 @@ define dso_local i32 @main(){
 %2 = alloca i32
 %3 = alloca i32
 %4 = alloca i32
-%5 = alloca i32
-%6 = alloca i32
-%7 = alloca i32
-%8 = alloca i32
-%9 = alloca [10 x i32]
-%10 = call i32 @getint()
-store i32 %10, i32* %8
-%11 = call i32 @getint()
-store i32 %11, i32* %7
-%12 = call i32 @getint()
-store i32 %12, i32* %6
-%13 = call i32 @getint()
-store i32 %13, i32* %5
-%14 = getelementptr [10 x i32], [10 x i32]* %9, i32 0, i32 0
-call void @memset(i32* %14, i32 0, i32 40)
-store i32 0, i32* %4
-br label %15
-15:
+%5 = alloca [3 x i32]
+%6 = getelementptr [3 x i32], [3 x i32]* %5, i32 0, i32 0
+call void @memset(i32* %6, i32 0, i32 12)
+%7 = sub i32 0, 2
+%8 = getelementptr [3 x i32], [3 x i32]* %5, i32 0, i32 0
+store i32 %7, i32* %8
+%9 = getelementptr [3 x i32], [3 x i32]* %5, i32 0, i32 1
+store i32 2, i32* %9
+%10 = sub i32 0, 7
+%11 = getelementptr [3 x i32], [3 x i32]* %5, i32 0, i32 2
+store i32 %10, i32* %11
+%12 = getelementptr [3 x i32], [3 x i32]* %5, i32 0, i32 0
+%13 = call i32 @_getMaxOfAll(i32* %12, i32 3)
+%14 = getelementptr [3 x i32], [3 x i32]* %5, i32 0, i32 %13
+%15 = load i32, i32* %14
+store i32 %15, i32* %4
 %16 = load i32, i32* %4
-%17 = icmp slt i32 %16, 10
-br i1 %17,label %18, label %24
-18:
-%19 = load i32, i32* %4
-%20 = call i32 @getint()
-%21 = getelementptr [10 x i32], [10 x i32]* %9, i32 0, i32 %19
-store i32 %20, i32* %21
-%22 = load i32, i32* %4
-%23 = add i32 %22, 1
-store i32 %23, i32* %4
-br label %15
-24:
-%25 = load i32, i32* %8
-%26 = call i32 @func7(i32 %25)
-%27 = load i32, i32* %7
-%28 = call i32 @func5(i32 %27)
-%29 = call i32 @func6(i32 %26, i32 %28)
-%30 = load i32, i32* %6
-%31 = call i32 @func2(i32 %29, i32 %30)
-%32 = load i32, i32* %5
-%33 = call i32 @func3(i32 %31, i32 %32)
-%34 = call i32 @func5(i32 %33)
-%35 = getelementptr [10 x i32], [10 x i32]* %9, i32 0, i32 0
-%36 = load i32, i32* %35
-%37 = getelementptr [10 x i32], [10 x i32]* %9, i32 0, i32 1
-%38 = load i32, i32* %37
-%39 = call i32 @func5(i32 %38)
-%40 = getelementptr [10 x i32], [10 x i32]* %9, i32 0, i32 2
-%41 = load i32, i32* %40
-%42 = getelementptr [10 x i32], [10 x i32]* %9, i32 0, i32 3
-%43 = load i32, i32* %42
-%44 = call i32 @func7(i32 %43)
-%45 = call i32 @func6(i32 %41, i32 %44)
-%46 = getelementptr [10 x i32], [10 x i32]* %9, i32 0, i32 4
-%47 = load i32, i32* %46
-%48 = getelementptr [10 x i32], [10 x i32]* %9, i32 0, i32 5
-%49 = load i32, i32* %48
-%50 = call i32 @func7(i32 %49)
-%51 = call i32 @func2(i32 %47, i32 %50)
-%52 = call i32 @func4(i32 %39, i32 %45, i32 %51)
-%53 = getelementptr [10 x i32], [10 x i32]* %9, i32 0, i32 6
-%54 = load i32, i32* %53
-%55 = call i32 @func3(i32 %52, i32 %54)
-%56 = getelementptr [10 x i32], [10 x i32]* %9, i32 0, i32 7
-%57 = load i32, i32* %56
-%58 = call i32 @func2(i32 %55, i32 %57)
-%59 = getelementptr [10 x i32], [10 x i32]* %9, i32 0, i32 8
-%60 = load i32, i32* %59
-%61 = getelementptr [10 x i32], [10 x i32]* %9, i32 0, i32 9
-%62 = load i32, i32* %61
-%63 = call i32 @func7(i32 %62)
-%64 = call i32 @func3(i32 %60, i32 %63)
-%65 = load i32, i32* %8
-%66 = call i32 @func1(i32 %58, i32 %64, i32 %65)
-%67 = call i32 @func4(i32 %34, i32 %36, i32 %66)
-%68 = load i32, i32* %7
-%69 = load i32, i32* %6
-%70 = call i32 @func7(i32 %69)
-%71 = load i32, i32* %5
-%72 = call i32 @func3(i32 %70, i32 %71)
-%73 = call i32 @func2(i32 %68, i32 %72)
-%74 = call i32 @func3(i32 %67, i32 %73)
-%75 = getelementptr [10 x i32], [10 x i32]* %9, i32 0, i32 0
-%76 = load i32, i32* %75
-%77 = getelementptr [10 x i32], [10 x i32]* %9, i32 0, i32 1
-%78 = load i32, i32* %77
-%79 = call i32 @func1(i32 %74, i32 %76, i32 %78)
-%80 = getelementptr [10 x i32], [10 x i32]* %9, i32 0, i32 2
-%81 = load i32, i32* %80
-%82 = call i32 @func2(i32 %79, i32 %81)
-%83 = getelementptr [10 x i32], [10 x i32]* %9, i32 0, i32 3
-%84 = load i32, i32* %83
-%85 = getelementptr [10 x i32], [10 x i32]* %9, i32 0, i32 4
-%86 = load i32, i32* %85
-%87 = getelementptr [10 x i32], [10 x i32]* %9, i32 0, i32 5
-%88 = load i32, i32* %87
-%89 = call i32 @func5(i32 %88)
-%90 = call i32 @func3(i32 %86, i32 %89)
-%91 = getelementptr [10 x i32], [10 x i32]* %9, i32 0, i32 6
-%92 = load i32, i32* %91
-%93 = call i32 @func5(i32 %92)
-%94 = call i32 @func2(i32 %90, i32 %93)
-%95 = getelementptr [10 x i32], [10 x i32]* %9, i32 0, i32 7
-%96 = load i32, i32* %95
-%97 = getelementptr [10 x i32], [10 x i32]* %9, i32 0, i32 8
-%98 = load i32, i32* %97
-%99 = call i32 @func7(i32 %98)
-%100 = call i32 @func1(i32 %94, i32 %96, i32 %99)
-%101 = getelementptr [10 x i32], [10 x i32]* %9, i32 0, i32 9
-%102 = load i32, i32* %101
-%103 = call i32 @func5(i32 %102)
-%104 = call i32 @func2(i32 %100, i32 %103)
-%105 = load i32, i32* %8
-%106 = call i32 @func3(i32 %104, i32 %105)
-%107 = call i32 @func1(i32 %82, i32 %84, i32 %106)
-store i32 %107, i32* %3
-%108 = load i32, i32* %3
-call void @putint(i32 %108)
+call void @putint(i32 %16)
 ret i32 0
 }

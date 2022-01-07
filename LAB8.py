@@ -1697,7 +1697,8 @@ class syntax_analysis:
                             self.readSym()
                             tmpArray.curElem[i] = self.Exp(tmpIdentifierList)
                             i+=1
-                            self.readSym()
+                            if not self.sym == ';':
+                                self.readSym()
                         ExpInputStack = saveExp
                         # resultList.append('%' + str(registerNum) + ' = getelementptr i32, i32* ' + str(
                         #     tmpArray.register) + ', i32 ' + str(tmpArray.getCurLength('call')) + '\n')
