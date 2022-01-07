@@ -1022,7 +1022,9 @@ class syntax_analysis:
                 tmpParam = copy.deepcopy(Func.paramContent)
                 tmpParam.append(tmp)
                 Func.paramContent = tmpParam
-                Func.paramType.append(requiredDim)
+                tmpType = copy.deepcopy(Func.paramType)
+                tmpType.append(requiredDim)
+                Func.paramType = tmpType
                 registerNum+=1
                 identifierList.append(tmp)
                 fromList.append(tmp)
