@@ -854,12 +854,17 @@ class syntax_analysis:
             self.readSym()
             if tokenList[self.tokenIndex+1] == '(':
                 self.FuncDef()
-                if 'ret' not in resultList[-2] and ':' not in resultList[-2]:
+                if 'ret' not in resultList[-2]:
                     resultList[-1] = 'ret void\n'
                     resultList.append('}\n')
-                elif ':' in resultList[-2]:
-                    resultList.pop(-1)
-                    resultList[-1] = '}\n'
+                # elif ':' in resultList[-2]:
+                #     label = resultList[-2].index(':')
+                #     labelNum = resultList[-2][0:label]
+                #     resultList.pop(-1)
+                #     resultList[-1] = '}\n'
+                    # for sen in resultList:
+                    #     if ('%'+labelNum) in sen:
+                    #         resultList.remove(sen)
                 registerNum = 0
                 return 1
             else:

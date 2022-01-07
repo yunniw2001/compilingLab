@@ -1,6 +1,14 @@
-declare void @putint(i32)
-declare void @memset(i32*, i32, i32)
-define dso_local i32 @exgcd(i32 %0, i32 %1, i32* %2, i32* %3){
+define dso_local void @move(i32 %0, i32 %1){
+%3 = alloca i32
+%4 = alloca i32
+%5 = alloca i32
+%6 = alloca i32
+store i32  %0, i32* %6
+%7 = alloca i32
+store i32  %1, i32* %7
+ret void
+}
+define dso_local void @hanoi(i32 %0, i32 %1, i32 %2, i32 %3){
 %5 = alloca i32
 %6 = alloca i32
 %7 = alloca i32
@@ -8,94 +16,41 @@ define dso_local i32 @exgcd(i32 %0, i32 %1, i32* %2, i32* %3){
 %9 = alloca i32
 %10 = alloca i32
 %11 = alloca i32
+store i32  %0, i32* %11
 %12 = alloca i32
+store i32  %1, i32* %12
 %13 = alloca i32
+store i32  %2, i32* %13
 %14 = alloca i32
-%15 = alloca i32
-%16 = alloca i32
-store i32  %0, i32* %16
-%17 = alloca i32
-store i32  %1, i32* %17
-%18 = alloca i32*
-store i32*  %2, i32* * %18
-%19 = load i32*, i32* * %18
-%20 = alloca i32*
-store i32*  %3, i32* * %20
-%21 = load i32*, i32* * %20
-%22 = load i32, i32* %17
-%23 = icmp eq i32 %22, 0
-br i1 %23,label %24, label %28
-24:
-%25 = getelementptr i32, i32* %2,i32 0
-store i32 1, i32* %25
-%26 = getelementptr i32, i32* %21,i32 0
-store i32 0, i32* %26
-%27 = load i32, i32* %16
-ret i32 %27
-28:
-%29 = load i32, i32* %17
-%30 = load i32, i32* %16
-%31 = load i32, i32* %17
-%32 = srem i32 %30, %31
-%33 = getelementptr i32, i32* %2,i32 0
-%34 = getelementptr i32, i32* %21,i32 0
-%35 = call i32 @exgcd(i32 %29, i32 %32, i32* %33, i32* %34)
-store i32 %35, i32* %11
-%36 = getelementptr i32, i32* %2,i32 0
-%37 = load i32, i32* %36
-store i32 %37, i32* %10
-%38 = getelementptr i32, i32* %21,i32 0
-%39 = load i32, i32* %38
-%40 = getelementptr i32, i32* %2,i32 0
-store i32 %39, i32* %40
-%41 = load i32, i32* %10
-%42 = load i32, i32* %16
-%43 = load i32, i32* %17
-%44 = getelementptr i32, i32* %21,i32 0
-%45 = load i32, i32* %44
-%46 = sdiv i32 %42, %43
-%47 = mul i32 %46, %45
-%48 = sub i32 %41, %47
-%49 = getelementptr i32, i32* %21,i32 0
-store i32 %48, i32* %49
-%50 = load i32, i32* %11
-ret i32 %50
+store i32  %3, i32* %14
+%15 = load i32, i32* %11
+%16 = icmp eq i32 %15, 1
+br i1 %16,label %17, label %20
+17:
+%18 = load i32, i32* %12
+%19 = load i32, i32* %14
+call void @move(i32 %18, i32 %19)
+br label %33
+20:
+%21 = load i32, i32* %11
+%22 = sub i32 %21, 1
+%23 = load i32, i32* %12
+%24 = load i32, i32* %14
+%25 = load i32, i32* %13
+call void @hanoi(i32 %22, i32 %23, i32 %24, i32 %25)
+%26 = load i32, i32* %12
+%27 = load i32, i32* %14
+call void @move(i32 %26, i32 %27)
+%28 = load i32, i32* %11
+%29 = sub i32 %28, 1
+%30 = load i32, i32* %13
+%31 = load i32, i32* %12
+%32 = load i32, i32* %14
+call void @hanoi(i32 %29, i32 %30, i32 %31, i32 %32)
+br label %33
+33:
+ret void
 }
 define dso_local i32 @main(){
-%1 = alloca i32
-%2 = alloca i32
-%3 = alloca i32
-%4 = alloca i32
-%5 = alloca i32
-%6 = alloca [1 x i32]
-%7 = alloca [1 x i32]
-store i32 7, i32* %5
-store i32 15, i32* %4
-%8 = getelementptr [1 x i32], [1 x i32]* %6, i32 0, i32 0
-call void @memset(i32* %8, i32 0, i32 4)
-%9 = getelementptr [1 x i32], [1 x i32]* %6, i32 0, i32 0
-store i32 1, i32* %9
-%10 = getelementptr [1 x i32], [1 x i32]* %7, i32 0, i32 0
-call void @memset(i32* %10, i32 0, i32 4)
-%11 = getelementptr [1 x i32], [1 x i32]* %7, i32 0, i32 0
-store i32 1, i32* %11
-%12 = load i32, i32* %5
-%13 = load i32, i32* %4
-%14 = getelementptr [1 x i32], [1 x i32]* %6, i32 0, i32 0
-%15 = getelementptr [1 x i32], [1 x i32]* %7, i32 0, i32 0
-%16 = call i32 @exgcd(i32 %12, i32 %13, i32* %14, i32* %15)
-%17 = getelementptr [1 x i32], [1 x i32]* %6, i32 0, i32 0
-%18 = load i32, i32* %17
-%19 = load i32, i32* %4
-%20 = load i32, i32* %4
-%21 = load i32, i32* %4
-%22 = srem i32 %18, %19
-%23 = add i32 %22, %20
-%24 = srem i32 %23, %21
-%25 = getelementptr [1 x i32], [1 x i32]* %6, i32 0, i32 0
-store i32 %24, i32* %25
-%26 = getelementptr [1 x i32], [1 x i32]* %6, i32 0, i32 0
-%27 = load i32, i32* %26
-call void @putint(i32 %27)
 ret i32 0
 }
