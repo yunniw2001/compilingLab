@@ -843,9 +843,12 @@ class syntax_analysis:
             self.readSym()
             if tokenList[self.tokenIndex+1] == '(':
                 self.FuncDef()
-                if 'ret' not in resultList[-2]:
+                if 'ret' not in resultList[-2] and ':' not in resultList[-2]:
                     resultList[-1] = 'ret void\n'
                     resultList.append('}\n')
+                elif ':' in resultList[-2]:
+                    resultList.pop(-1)
+                    resultList[-1] = '}\n'
                 registerNum = 0
                 return 1
             else:
@@ -1550,7 +1553,7 @@ class syntax_analysis:
                                         resultList[pos] += (', label %' + str(registerNum) + '\n')
                                         resultList.append(str(registerNum) + ':\n')
                                         registerNum+=1
-                                        self.Stmt(pos)
+                                        self.Stmt(pos,tmpIdentifierlist)
                                         registerNum-=1
                                         if not ifPos == -1:
                                             resultList[ifPos] += (str(registerNum) + '\n')
@@ -1944,7 +1947,10 @@ class syntax_analysis:
                 if tmp == -1:
                     sys.exit(-1)
                 else:
-                    tmpVal = tmpIdentifierList[tmp]
+                    if not isinstance(tmp,identifier):
+                        tmpVal = tmpIdentifierList[tmp]
+                    else:
+                        tmpVal = tmp
                     if tmpVal.type == 'ConstVal':
                         ExpInputStack.append(str(tmpVal.value))
                     elif tmpVal.type == 'array':
@@ -1972,7 +1978,7 @@ class syntax_analysis:
                             #     tmpArray.register) + ', i32 ' + str(tmpArray.getCurLength('call')) + '\n')
                             pos =tmp_Array.getCurLength('call').content
                             if findIndexByContent(tmpVal.content,FuncList[curFuncIndex].paramContent)==-1:
-                                resultList.append('%' + str(registerNum) + ' = getelementptr ' + str(
+                                resultList.append('%' + str(registerNum) + ' = getelementptr [' + str(
                                     tmp_Array.getTotalLength()) + ' x i32], [' + str(
                                     tmp_Array.getTotalLength()) + ' x i32]* ' + str(
                                     tmp_Array.register) + ', i32 0, i32 ' + str(pos) + '\n')
