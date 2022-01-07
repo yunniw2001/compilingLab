@@ -854,14 +854,14 @@ class syntax_analysis:
             self.readSym()
             if tokenList[self.tokenIndex+1] == '(':
                 self.FuncDef()
-                if 'ret' not in resultList[-2]:
+                if 'ret' not in resultList[-2] and not (':' in resultList[-2] and 'ret' in resultList[-4]):
                     resultList[-1] = 'ret void\n'
                     resultList.append('}\n')
-                # elif ':' in resultList[-2]:
-                #     label = resultList[-2].index(':')
-                #     labelNum = resultList[-2][0:label]
-                #     resultList.pop(-1)
-                #     resultList[-1] = '}\n'
+                elif ':' in resultList[-2] and 'ret' in resultList[-4]:
+                    label = resultList[-2].index(':')
+                    labelNum = resultList[-2][0:label]
+                    resultList.pop(-1)
+                    resultList[-1] = '}\n'
                     # for sen in resultList:
                     #     if ('%'+labelNum) in sen:
                     #         resultList.remove(sen)
@@ -1729,7 +1729,7 @@ class syntax_analysis:
             if self.readSym():
                 if self.sym == '(':
                     resultList.append('%' + str(registerNum) + ' = call i32 @getint()\n')
-                    cur = '%' + str(registerNum)
+                    cur = str(registerNum)
                     registerNum += 1
                     if self.readSym():
                         if self.sym == ')':
