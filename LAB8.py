@@ -869,6 +869,8 @@ class syntax_analysis:
             self.readSym()
             if not self.sym == ')':
                 resultList.append(', ')
+                if not self.sym == ',':
+                    self.tokenIndex-=1
             else:
                 break
             self.readSym()
@@ -1155,6 +1157,10 @@ class syntax_analysis:
                 tmpArray.curElem = [0 for i in range(len(tmpArray.dim))]
                 tmpArray.value = [0 for i in range(tmpArray.getTotalLength())]
                 if not fromBlock == 'global':
+                    anotherPos = arrayList[findIndexByContent(tmpArray.content, arrayList)]
+                    if tmpArray.defPos < anotherPos.defPos:
+                        tmpArray.defPos = anotherPos.defPos
+                        tmpArray.register = anotherPos.register
                     resultList.append('%' + str(registerNum) + ' = getelementptr [' + str(
                         tmpArray.getTotalLength()) + ' x i32], [' + str(
                         tmpArray.getTotalLength()) + ' x i32]* ' + str(
@@ -1407,7 +1413,7 @@ class syntax_analysis:
                         tmpArray.curElem = saveCurElem
                         pos =tmpArray.getCurLength('call').content
                         if tmpLVar not in FuncList[curFuncIndex].paramContent:
-                            resultList.append('%' + str(registerNum) + ' = getelementptr ' + str(
+                            resultList.append('%' + str(registerNum) + ' = getelementptr [' + str(
                                 tmpArray.getTotalLength()) + ' x i32], [' + str(
                                 tmpArray.getTotalLength()) + ' x i32]* ' + str(
                                 tmpArray.register) + ', i32 0, i32 ' + str(pos) + '\n')
@@ -1609,8 +1615,8 @@ class syntax_analysis:
                         # resultList.append('%' + str(registerNum) + ' = getelementptr i32, i32* ' + str(
                         #     tmpArray.register) + ', i32 ' + str(tmpArray.getCurLength('call')) + '\n')
                         pos = tmpArray.getCurLength('call').content
-                        if tmpVal not in FuncList[curFuncIndex].paramContent:
-                            resultList.append('%' + str(registerNum) + ' = getelementptr ' + str(
+                        if findIndexByContent(tmpVal.content,FuncList[curFuncIndex].paramContent)==-1:
+                            resultList.append('%' + str(registerNum) + ' = getelementptr [' + str(
                                 tmpArray.getTotalLength()) + ' x i32], [' + str(
                                 tmpArray.getTotalLength()) + ' x i32]* ' + str(
                                 tmpArray.register) + ', i32 0, i32 ' + str(pos) + '\n')
@@ -1737,6 +1743,9 @@ class syntax_analysis:
                     if len(tmpFunc.param)>0:
                         while self.readSym():
                             if i>= len(tmpFunc.param):
+                                if self.sym == ';':
+                                    self.tokenIndex-=1
+                                    break
                                 sys.exit(-1)
                             if i == len(tmpFunc.param)-1:
                                 flag = True
@@ -1903,14 +1912,21 @@ class syntax_analysis:
                             self.readSym()
                             while self.sym == '[':
                                 self.readSym()
-                                tmp_Array.curElem[i] = self.Exp()
+                                tmp_Array.curElem[i] = self.Exp(tmpIdentifierList)
                                 i += 1
                                 self.readSym()
                             ExpInputStack = copy.deepcopy(saveExp)
                             # resultList.append('%' + str(registerNum) + ' = getelementptr i32, i32* ' + str(
                             #     tmpArray.register) + ', i32 ' + str(tmpArray.getCurLength('call')) + '\n')
                             pos =tmp_Array.getCurLength('call').content
-                            resultList.append('%' + str(registerNum) + ' = getelementptr ['+str(tmp_Array.getTotalLength())+' x i32], ['+str(tmp_Array.getTotalLength())+' x i32]* '+str(tmp_Array.register)+', i32 0, i32 '+str(pos) + '\n')
+                            if findIndexByContent(tmpVal.content,FuncList[curFuncIndex].paramContent)==-1:
+                                resultList.append('%' + str(registerNum) + ' = getelementptr ' + str(
+                                    tmp_Array.getTotalLength()) + ' x i32], [' + str(
+                                    tmp_Array.getTotalLength()) + ' x i32]* ' + str(
+                                    tmp_Array.register) + ', i32 0, i32 ' + str(pos) + '\n')
+                            else:
+                                resultList.append('%' + str(registerNum) + ' = getelementptr i32, i32* ' + str(
+                                    tmp_Array.register) + ',i32 ' + str(pos) + '\n')
                             resultList.append(
                                 '%' + str(registerNum + 1) + ' = load i32, i32* %' + str(registerNum) + '\n')
                             registerNum += 1
@@ -2023,42 +2039,42 @@ if __name__ == '__main__':
     # print(input)
     line = file.readline()
     while line:
-        print(line)
-    #     if ifNotes and ('*/' not in line):
-    #         line = file.readline()
-    #         continue
-    #     lineList = line.split()
-    #     lexical_analysis(lineList)
-    #     tokenList.append('\n')
+        # print(line)
+        if ifNotes and ('*/' not in line):
+            line = file.readline()
+            continue
+        lineList = line.split()
+        lexical_analysis(lineList)
+        tokenList.append('\n')
         line = file.readline()
-    # if ifNotes:
-    #     sys.exit(-1)
-    # s_a = syntax_analysis()
-    # s_a.CompUnit('origin')
-    # outFile = open(ir, mode='w')
-    # i = 0
-    # retRes = []
-    # i = 0
-    # ifret = 0
-    # while i<len(resultList):
-    #     if 'ret' in resultList[i]:
-    #         ifret = 1
-    #         retRes.append(resultList[i])
-    #         i+=1
-    #         continue
-    #     if ifret == 1:
-    #         if 'br' in resultList[i]:
-    #             ifret = 0
-    #             i+=1
-    #             continue
-    #         ifret = 0
-    #         retRes.append(resultList[i])
-    #         i+=1
-    #         continue
-    #     retRes.append(resultList[i])
-    #     i+=1
-    #
-    # for sym in retRes:
-    #     outFile.write(sym)
-    # outFile.close()
-    # sys.exit(0)
+    if ifNotes:
+        sys.exit(-1)
+    s_a = syntax_analysis()
+    s_a.CompUnit('origin')
+    outFile = open(ir, mode='w')
+    i = 0
+    retRes = []
+    i = 0
+    ifret = 0
+    while i<len(resultList):
+        if 'ret' in resultList[i]:
+            ifret = 1
+            retRes.append(resultList[i])
+            i+=1
+            continue
+        if ifret == 1:
+            if 'br' in resultList[i]:
+                ifret = 0
+                i+=1
+                continue
+            ifret = 0
+            retRes.append(resultList[i])
+            i+=1
+            continue
+        retRes.append(resultList[i])
+        i+=1
+
+    for sym in retRes:
+        outFile.write(sym)
+    outFile.close()
+    sys.exit(0)
