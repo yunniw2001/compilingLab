@@ -282,6 +282,14 @@ def findIndexByContent(content,tmpList):
             i+=1
     return -1
 
+def findIndexByContentOrigin(content,tmpList):
+    i = len(tmpList)-1
+    while i >=0 :
+        if tmpList[i].content == content:
+            return i
+        i -= 1
+    return -1
+
 def finArrayIndexByContent(content):
     global arrayList
     i = 0
@@ -924,6 +932,7 @@ class syntax_analysis:
                 tmp.type = 'LVal'
                 tmp.content = self.sym
                 tmp.register = '%' +str(registerNum)
+                tmp.hasDefine = True
                 if tokenList[self.tokenIndex] == '[':
                     tmp.type = 'array'
                     tmp.toMyArray = arrayList[getLocalArrayIndexByContent(self.sym)]
@@ -1053,6 +1062,11 @@ class syntax_analysis:
             while i < len(arrayList) and n==1:
                 if arrayList[i].appearFunc == curFuncIndex:
                     tmpArray = arrayList[i]
+                    pos = findIndexByContentOrigin(tmpArray.content,tmpidentifierList)
+                    if pos>=0:
+                        anotherVersion = tmpidentifierList[pos]
+                        if anotherVersion.hasDefine == True:
+                            tmpArray.hasDefine = True
                     if not tmpArray.area == 'global' and not tmpArray.hasDefine:
                         resultList.append('%' + str(registerNum) + ' = alloca ')
                         arrayList[i].register = '%' + str(registerNum)
@@ -1425,7 +1439,7 @@ class syntax_analysis:
                         res = self.Exp(tmpIdentifierlist)
                         tmpArray.curElem = saveCurElem
                         pos =tmpArray.getCurLength('call').content
-                        if tmpLVar not in FuncList[curFuncIndex].paramContent:
+                        if findIndexByContentOrigin(tmpArray.content,FuncList[curFuncIndex].paramContent)==-1:
                             resultList.append('%' + str(registerNum) + ' = getelementptr [' + str(
                                 tmpArray.getTotalLength()) + ' x i32], [' + str(
                                 tmpArray.getTotalLength()) + ' x i32]* ' + str(
@@ -1520,7 +1534,7 @@ class syntax_analysis:
                                         resultList[pos]+=(', label %' + str(registerNum) + '\n')
                                         resultList.append(str(registerNum) + ':\n')
                                         registerNum+=1
-                                        self.Stmt(ifPos)
+                                        self.Stmt(ifPos,tmpIdentifierlist)
                                         if not ifPos == -1:
                                             resultList[ifPos]+=(str(registerNum)+'\n')
                                         if not 'br' in resultList[-1]:
@@ -1823,7 +1837,10 @@ class syntax_analysis:
                     else:
                         tmpVal = FuncList[tmp]
                 else:
-                    tmpVal = tmpIdentifierList[tmp]
+                    if not  isinstance(tmp,identifier):
+                        tmpVal = tmpIdentifierList[tmp]
+                    else:
+                        tmpVal = tmp
                 if tmpVal.type == 'ConstVal':
                     ExpInputStack.append(str(tmpVal.value))
                 elif tmpVal.type == 'array':
@@ -1853,7 +1870,14 @@ class syntax_analysis:
                         # resultList.append('%' + str(registerNum) + ' = getelementptr i32, i32* ' + str(
                         #     tmpArray.register) + ', i32 ' + str(tmpArray.getCurLength('call')) + '\n')
                         pos =tmp_Array.getCurLength('call').content
-                        resultList.append('%' + str(registerNum) + ' = getelementptr ['+str(tmp_Array.getTotalLength())+' x i32], ['+str(tmp_Array.getTotalLength())+' x i32]* '+str(tmp_Array.register)+', i32 0, i32 '+str(pos) + '\n')
+                        if findIndexByContent(tmpVal.content,FuncList[curFuncIndex].paramContent)==-1:
+                            resultList.append('%' + str(registerNum) + ' = getelementptr [' + str(
+                                tmp_Array.getTotalLength()) + ' x i32], [' + str(
+                                tmp_Array.getTotalLength()) + ' x i32]* ' + str(
+                                tmp_Array.register) + ', i32 0, i32 ' + str(pos) + '\n')
+                        else:
+                            resultList.append('%' + str(registerNum) + ' = getelementptr i32, i32* ' + str(
+                                tmp_Array.register) + ',i32 ' + str(pos) + '\n')
                         if not tmpVal in FuncList[curFuncIndex].paramContent and ifNeedLoad:
                             resultList.append(
                             '%' + str(registerNum + 1) + ' = load i32, i32* %' + str(registerNum) + '\n')
