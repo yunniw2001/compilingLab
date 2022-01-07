@@ -8,6 +8,7 @@ resultList = []
 ifNotes = 0
 ifDef = 0
 ifConst =0
+ifInt = 0
 ifexp = 0
 SymbolStack = []
 ExpInputStack = []
@@ -38,9 +39,11 @@ def judge_alpha(token):
     global ifDef
     global ifConst
     global ifexp
+    global ifInt
     global curFuncIndex
     if token == 'int':
         ifDef =1
+        ifInt = 1
         tokenList.append(token)
     elif token == 'void':
         tokenList.append(token)
@@ -145,6 +148,7 @@ def lexical_analysis(linelist):
     global ifDef
     global ifConst
     global ifexp
+    global ifInt
     m = 0
     while m <len(linelist):
         word = linelist[m]
@@ -200,6 +204,8 @@ def lexical_analysis(linelist):
                             ifConst =0
                             ifDef = 0
                             ifexp =0
+                            if word[index] == ';':
+                                ifInt = 0
                         token = word[index]
                         tokenList.append(token)
                         token = ''
@@ -230,10 +236,14 @@ def lexical_analysis(linelist):
                     ifConst = 0
                     ifDef = 0
                     ifexp =0
+                    if word[index] == ';':
+                        ifInt = 0
                 if word[index] == '=':
                     ifexp =1
                 if word[index] == ',':
                     ifexp = 0
+                    if ifInt == 1:
+                        ifDef = 1
             # 判断是否为逻辑符号
             elif word[index] == '<' or word[index] == '>':
                 token = word[index]
@@ -1247,7 +1257,7 @@ class syntax_analysis:
                         return 1
                     elif self.sym == ',':
                         self.readSym()
-                        self.VarDef('global',fromList)
+                        self.VarDef(fromBlock,fromList)
                         return 1
                 elif fromBlock == 'global':
                     tmpArray.curElem = [0 for i in range(len(tmpArray.dim))]
