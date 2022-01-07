@@ -1351,41 +1351,41 @@ class syntax_analysis:
                 if self.sym == ';':
                     resultList.append('ret')
                     return 1
-                while not self.sym == ';':
-                    if (self.sym[0] == '_' or self.sym[0].isalpha()) and self.sym not in FuncIdent and not findFuncIndexByContent(self.sym)>=0:
-                        tmp = findIndexByContent(self.sym,tmpIdentifierlist)
-                        if tmp == -1:
-                            sys.exit(-1)
-                        else:
-                            tmpVal = tmpIdentifierlist[tmp]
-                            if tmpVal.type == 'ConstVal':
-                                ExpInputStack.append(str(tmpVal.value))
-                            else:
-                                resultList.append(
-                                    '%' + str(registerNum) + ' = load i32, i32* ' + str(tmpVal.register) + '\n')
-                                tmpExp = Expression()
-                                tmpExp.type = 'i32'
-                                tmpExp.isregister = True
-                                tmpExp.content = '%' + str(registerNum)
-                                registerNum += 1
-                                ExpInputStack.append(tmpExp)
-                    elif self.sym in FuncIdent or findFuncIndexByContent(self.sym)>=0:
-                        res = self.Func(tmpIdentifierlist)
-                        self.tokenIndex-=1
-                        tmpExp = Expression()
-                        tmpExp.type = 'i32'
-                        tmpExp.isregister = True
-                        tmpExp.content = '%' + res
-                        registerNum += 1
-                        ExpInputStack.append(tmpExp)
-                    else:
-                        ExpInputStack.append(self.sym)
-                    self.readSym()
-                if self.sym == ';':
-                    o_p = Operator_precedence()
-                    res = o_p.Operator_precedence_grammar('LVal')
+                # while not self.sym == ';':
+                #     if (self.sym[0] == '_' or self.sym[0].isalpha()) and self.sym not in FuncIdent and not findFuncIndexByContent(self.sym)>=0:
+                #         tmp = findIndexByContent(self.sym,tmpIdentifierlist)
+                #         if tmp == -1:
+                #             sys.exit(-1)
+                #         else:
+                #             tmpVal = tmpIdentifierlist[tmp]
+                #             if tmpVal.type == 'ConstVal':
+                #                 ExpInputStack.append(str(tmpVal.value))
+                #             else:
+                #                 resultList.append(
+                #                     '%' + str(registerNum) + ' = load i32, i32* ' + str(tmpVal.register) + '\n')
+                #                 tmpExp = Expression()
+                #                 tmpExp.type = 'i32'
+                #                 tmpExp.isregister = True
+                #                 tmpExp.content = '%' + str(registerNum)
+                #                 registerNum += 1
+                #                 ExpInputStack.append(tmpExp)
+                #     elif self.sym in FuncIdent or findFuncIndexByContent(self.sym)>=0:
+                #         res = self.Func(tmpIdentifierlist)
+                #         self.tokenIndex-=1
+                #         tmpExp = Expression()
+                #         tmpExp.type = 'i32'
+                #         tmpExp.isregister = True
+                #         tmpExp.content = '%' + res
+                #         registerNum += 1
+                #         ExpInputStack.append(tmpExp)
+                #     else:
+                #         ExpInputStack.append(self.sym)
+                #     self.readSym()
+                else:
+                    res = self.Exp(tmpIdentifierlist)
                     resultList.append('ret i32 ' + str(res.content) + '\n')
                     return 1
+
         elif (self.sym[0] == '_' or self.sym[0].isalpha()) and self.sym not in FuncIdent and findFuncIndexByContent(self.sym) == -1 and not self.sym == 'if' and not self.sym == 'else' and not self.sym in ['while','continue','break']:
             tmpLVar = self.LVal(tmpIdentifierlist)
             # if not tmpLVar.type == 'LVal' and not :
@@ -1654,7 +1654,10 @@ class syntax_analysis:
             elif self.sym.isdigit():
                 ExpInputStack.append(self.sym)
             elif self.sym in FuncIdent or findFuncIndexByContent(self.sym)>=0:
+                saveExp = copy.deepcopy(ExpInputStack)
+                ExpInputStack=[]
                 res = self.Func(tmpIdentifierList)
+                ExpInputStack = saveExp
                 tmpExp = Expression()
                 tmpExp.type = 'i32'
                 tmpExp.isregister = True
@@ -1672,6 +1675,7 @@ class syntax_analysis:
     def Func(self,fromList = 'default'):
         global registerNum
         global resultList
+        global ExpInputStack
         if self.sym == 'getint':
             if self.readSym():
                 if self.sym == '(':
@@ -1752,15 +1756,23 @@ class syntax_analysis:
                             else:
                                 flag = False
                             if tmpFunc.param[i] == 'i32*':
+                                saveExp = copy.deepcopy(ExpInputStack)
+                                ExpInputStack = []
                                 res = self.FuncJudgeIfEnd_Exp(fromList,False,flag)
+                                ExpInputStack = saveExp
                             else:
+                                saveExp = copy.deepcopy(ExpInputStack)
                                 res = self.FuncJudgeIfEnd_Exp(fromList,ifLast=flag)
+                                ExpInputStack = saveExp
                             i+=1
                             tmpParamRegister.append(res.content)
                             if self.sym == ')':
                                 if self.readSym():
                                     if self.sym == ';':
                                         break
+                            if self.sym == '+':
+                                self.tokenIndex-=1
+                                break
                     else:
                         self.readSym()
                         self.readSym()
@@ -1886,7 +1898,7 @@ class syntax_analysis:
     def CondJudgeIfEnd_exp(self,tmpIdentifierList):
         global registerNum
         global ExpInputStack
-        while not tokenList[self.tokenIndex] == '{' and not (self.sym== ')' and findIndexByContent(tokenList[self.tokenIndex])== -1 and not tokenList[self.tokenIndex] in ['+','-','*','%','/','||','>=','<=','>','<','!','!=','==']):
+        while not tokenList[self.tokenIndex] == '{' and not (self.sym== ')' and findIndexByContent(tokenList[self.tokenIndex],tmpIdentifierList)== -1 and not tokenList[self.tokenIndex] in ['+','-','*','%','/','||','>=','<=','>','<','!','!=','==']):
             if (self.sym[0] == '_' or self.sym[0].isalpha()) and self.sym not in FuncIdent and self.sym not in comparator and not self.sym == '&&' and not self.sym == '||':
                 tmp = findIndexByContent(self.sym,tmpIdentifierList)
                 if tmp == -1:
