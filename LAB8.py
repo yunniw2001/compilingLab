@@ -105,7 +105,8 @@ def judge_alpha(token):
                 tmp.content = name
                 tmp.type = 'array'
                 identifierList.append(tmp)
-                FuncList[curFuncIndex].curFuncIdentifierList.append(tmp)
+                if curFuncIndex >= 0:
+                    FuncList[curFuncIndex].curFuncIdentifierList.append(tmp)
             tokenList.append(name)
             tokenList.append('[')
     else:
@@ -1648,7 +1649,7 @@ class syntax_analysis:
                         # resultList.append('%' + str(registerNum) + ' = getelementptr i32, i32* ' + str(
                         #     tmpArray.register) + ', i32 ' + str(tmpArray.getCurLength('call')) + '\n')
                         pos = tmpArray.getCurLength('call').content
-                        if findIndexByContent(tmpVal.content,FuncList[curFuncIndex].paramContent)==-1:
+                        if findIndexByContentOrigin(tmpVal.content,FuncList[curFuncIndex].paramContent)==-1:
                             resultList.append('%' + str(registerNum) + ' = getelementptr [' + str(
                                 tmpArray.getTotalLength()) + ' x i32], [' + str(
                                 tmpArray.getTotalLength()) + ' x i32]* ' + str(
@@ -1722,7 +1723,7 @@ class syntax_analysis:
             if self.readSym():
                 if self.sym == '(':
                     resultList.append('%' + str(registerNum) + ' = call i32 @getch()\n')
-                    cur = '%' + str(registerNum)
+                    cur = str(registerNum)
                     registerNum += 1
                     if self.readSym():
                         if self.sym == ')':
@@ -1803,7 +1804,7 @@ class syntax_analysis:
                                 if self.readSym():
                                     if self.sym == ';':
                                         break
-                            if self.sym == '+':
+                            if self.sym in ['+','==']:
                                 self.tokenIndex-=1
                                 break
                     else:
@@ -1873,7 +1874,7 @@ class syntax_analysis:
                         # resultList.append('%' + str(registerNum) + ' = getelementptr i32, i32* ' + str(
                         #     tmpArray.register) + ', i32 ' + str(tmpArray.getCurLength('call')) + '\n')
                         pos =tmp_Array.getCurLength('call').content
-                        if findIndexByContent(tmpVal.content,FuncList[curFuncIndex].paramContent)==-1:
+                        if findIndexByContentOrigin(tmpVal.content,FuncList[curFuncIndex].paramContent)==-1:
                             resultList.append('%' + str(registerNum) + ' = getelementptr [' + str(
                                 tmp_Array.getTotalLength()) + ' x i32], [' + str(
                                 tmp_Array.getTotalLength()) + ' x i32]* ' + str(
@@ -1942,12 +1943,16 @@ class syntax_analysis:
         global registerNum
         global ExpInputStack
         while not tokenList[self.tokenIndex] == '{' and not (self.sym== ')' and findIndexByContent(tokenList[self.tokenIndex],tmpIdentifierList)== -1 and not tokenList[self.tokenIndex] in ['+','-','*','%','/','||','>=','<=','>','<','!','!=','==']):
-            if (self.sym[0] == '_' or self.sym[0].isalpha()) and self.sym not in FuncIdent and self.sym not in comparator and not self.sym == '&&' and not self.sym == '||':
-                tmp = findIndexByContent(self.sym,tmpIdentifierList)
+            if (self.sym[0] == '_' or self.sym[0].isalpha()) and self.sym not in FuncIdent and self.sym not in comparator and not self.sym == '&&' and not self.sym == '||'  and not findFuncIndexByContent(self.sym)>=0:
+                tmp = findIndexByContent(self.sym, tmpIdentifierList)
                 if tmp == -1:
-                    sys.exit(-1)
+                    tmp = findFuncIndexByContent(self.sym)
+                    if tmp == -1:
+                        sys.exit(-1)
+                    else:
+                        tmpVal = FuncList[tmp]
                 else:
-                    if not isinstance(tmp,identifier):
+                    if not isinstance(tmp, identifier):
                         tmpVal = tmpIdentifierList[tmp]
                     else:
                         tmpVal = tmp
@@ -1977,7 +1982,7 @@ class syntax_analysis:
                             # resultList.append('%' + str(registerNum) + ' = getelementptr i32, i32* ' + str(
                             #     tmpArray.register) + ', i32 ' + str(tmpArray.getCurLength('call')) + '\n')
                             pos =tmp_Array.getCurLength('call').content
-                            if findIndexByContent(tmpVal.content,FuncList[curFuncIndex].paramContent)==-1:
+                            if findIndexByContentOrigin(tmpVal.content,FuncList[curFuncIndex].paramContent)==-1:
                                 resultList.append('%' + str(registerNum) + ' = getelementptr [' + str(
                                     tmp_Array.getTotalLength()) + ' x i32], [' + str(
                                     tmp_Array.getTotalLength()) + ' x i32]* ' + str(
@@ -2005,13 +2010,14 @@ class syntax_analysis:
                         registerNum += 1
                         ExpInputStack.append(tmpExp)
             elif self.sym.isdigit():
+                if isinstance(ExpInputStack[-1],Expression):
+                    ExpInputStack.append(tokenList[self.tokenIndex-2])
                 ExpInputStack.append(self.sym)
-            elif self.sym in FuncIdent:
-                res = self.Func()
+            elif self.sym in FuncIdent or findFuncIndexByContent(self.sym)>=0:
+                res = self.Func(tmpIdentifierList)
                 tmpExp = Expression()
                 tmpExp.isregister = True
-                tmpExp.content = res
-                registerNum += 1
+                tmpExp.content = '%'+res
                 ExpInputStack.append(tmpExp)
             else:
                 ExpInputStack.append(self.sym)
