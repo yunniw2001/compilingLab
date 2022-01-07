@@ -67,9 +67,10 @@ def judge_alpha(token):
                 tmp = identifier()
                 tmp.content = token
                 identifierList.append(tmp)
-                tmpList = copy.deepcopy(FuncList[curFuncIndex].curFuncIdentifierList)
-                tmpList.append(tmp)
-                FuncList[curFuncIndex].curFuncIdentifierList = tmpList
+                if curFuncIndex>=0:
+                    tmpList = copy.deepcopy(FuncList[curFuncIndex].curFuncIdentifierList)
+                    tmpList.append(tmp)
+                    FuncList[curFuncIndex].curFuncIdentifierList = tmpList
             tokenList.append(token)
         # 函数标识符
         elif '(' in token:
@@ -273,6 +274,12 @@ def findIndexByContent(content,tmpList):
         if tmpList[i].content == content:
             return i
         i -= 1
+    if i ==-1:
+        i = 0
+        while i<len(identifierList):
+            if identifierList[i].content == content and identifierList[i].area == 'global':
+                return identifierList[i]
+            i+=1
     return -1
 
 def finArrayIndexByContent(content):
@@ -376,6 +383,7 @@ class identifier:
     content = ''
     type = ''
     value = 0
+    area = 'default'
     toMyArray = My_array()
     toMyFunction = My_Function()
     hasPointer:False
@@ -819,10 +827,6 @@ class syntax_analysis:
             if len(arrayList)>0:
                 resultList.append('declare void @memset(i32*, i32, i32)\n')
             while self.CompUnit():
-                if 'ret' not in resultList[-2]:
-                    resultList[-1] = 'ret void\n'
-                    resultList.append('}\n')
-                registerNum = 0
                 if self.tokenIndex+1 == len(tokenList):
                     break
             return 1
@@ -831,9 +835,13 @@ class syntax_analysis:
             self.readSym()
             if tokenList[self.tokenIndex+1] == '(':
                 self.FuncDef()
+                if 'ret' not in resultList[-2]:
+                    resultList[-1] = 'ret void\n'
+                    resultList.append('}\n')
+                registerNum = 0
                 return 1
             else:
-                self.Decl()
+                self.Decl('global',identifierList)
                 return 1
 
         sys.exit(-1)
@@ -968,7 +976,7 @@ class syntax_analysis:
                 # return identifierList[tmp]
         elif fromRule == 'VarDef':
             tmp = findIndexByContent(self.sym,fromList)
-            if tmp == -1 or len(curBlockStart) == 0 or tmp <curBlockStart[len(curBlockStart)-1]:
+            if tmp == -1 or len(curBlockStart) == 0 or isinstance(tmp,identifier) or tmp <curBlockStart[len(curBlockStart)-1]:
                 tmp = identifier()
                 tmp.type = 'LVal'
                 tmp.content = self.sym
@@ -986,7 +994,10 @@ class syntax_analysis:
                 sys.exit(-1)
             else:
                 # identifierList[tmp].type = 'LVal'
-                return fromList[tmp]
+                if not isinstance(tmp,identifier):
+                    return fromList[tmp]
+                else:
+                    return tmp
         else:
             sys.exit(-1)
 
@@ -1005,8 +1016,8 @@ class syntax_analysis:
                 # 给变量分配空间
                 i = 1
                 if varStart > 0:
-                    LVarRegister = varStart - constNum+1
-                    while i <= varStart+1-constNum:
+                    LVarRegister = varStart +1
+                    while i <= varStart+1:
                         resultList.append('%' + str(registerNum) + ' = alloca i32\n')
                         # identifierList[i].register = '%' + str(registerNum)
                         registerNum += 1
@@ -1120,6 +1131,7 @@ class syntax_analysis:
         tmp = identifier()
         tmp = self.Ident('VarDef',fromList)
         if fromBlock == 'global':
+            tmp.area = 'global'
             if tmp.type == 'array':
                 tmp.toMyArray.register = '@'+self.sym
                 tmp.toMyArray.area = 'global'
@@ -1250,6 +1262,7 @@ class syntax_analysis:
         tmp = identifier()
         tmp = self.Ident('ConstDef')
         tmp.type = 'ConstVal'
+        tmp.area = 'global'
         if self.readSym():
             if self.sym == '=':
                 if self.readSym():
@@ -1594,7 +1607,10 @@ class syntax_analysis:
                     else:
                         tmpVal = FuncList[tmp]
                 else:
-                    tmpVal = tmpIdentifierList[tmp]
+                    if not isinstance(tmp,identifier):
+                        tmpVal = tmpIdentifierList[tmp]
+                    else:
+                        tmpVal = tmp
                 if tmpVal.type == 'ConstVal':
                     ExpInputStack.append(str(tmpVal.value))
                 elif tmpVal.type == 'array':
