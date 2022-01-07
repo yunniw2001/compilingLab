@@ -990,6 +990,7 @@ class syntax_analysis:
                 tmp.content = self.sym
                 tmp.register = '%' +str(registerNum)
                 tmp.hasDefine = True
+                requiredDim = 0;
                 if tokenList[self.tokenIndex] == '[':
                     tmp.type = 'array'
                     tmp.toMyArray = arrayList[getLocalArrayIndexByContent(self.sym)]
@@ -1008,6 +1009,7 @@ class syntax_analysis:
                         tmpDim = self.ConstExp(fromList)
                         tmpDimArray.append(tmpDim)
                         self.readSym()
+                    requiredDim = len(tmpDimArray)
                     if self.sym == ')':
                         self.tokenIndex-=1
                     tmp.toMyArray.dim = tmpDimArray
@@ -1020,6 +1022,7 @@ class syntax_analysis:
                 tmpParam = copy.deepcopy(Func.paramContent)
                 tmpParam.append(tmp)
                 Func.paramContent = tmpParam
+                Func.paramType.append(requiredDim)
                 registerNum+=1
                 identifierList.append(tmp)
                 fromList.append(tmp)
@@ -1580,6 +1583,8 @@ class syntax_analysis:
                             if self.readSym():
                                 block_register = self.Stmt(pos,tmpIdentifierlist)
                                 self.readSym()
+                                if self.sym == ';':
+                                    self.readSym()
                                 if self.sym == 'else':
                                     self.readSym()
                                     if not self.sym == 'if':
@@ -1849,11 +1854,11 @@ class syntax_analysis:
                             if tmpFunc.param[i] == 'i32*':
                                 saveExp = copy.deepcopy(ExpInputStack)
                                 ExpInputStack = []
-                                res = self.FuncJudgeIfEnd_Exp(fromList,False,flag)
+                                res = self.FuncJudgeIfEnd_Exp(fromList,False,flag,tmpFunc.paramType[i])
                                 ExpInputStack = saveExp
                             else:
                                 saveExp = copy.deepcopy(ExpInputStack)
-                                res = self.FuncJudgeIfEnd_Exp(fromList,ifLast=flag)
+                                res = self.FuncJudgeIfEnd_Exp(fromList,ifLast=flag,requiredDim=tmpFunc.paramType[i])
                                 ExpInputStack = saveExp
                             i+=1
                             tmpParamRegister.append(res.content)
@@ -1882,7 +1887,7 @@ class syntax_analysis:
                         resultList+=(')\n')
                     return retRes
 
-    def FuncJudgeIfEnd_Exp(self,tmpIdentifierList,ifNeedLoad = True,ifLast = False):
+    def FuncJudgeIfEnd_Exp(self,tmpIdentifierList,ifNeedLoad = True,ifLast = False,requiredDim = -1):
         global registerNum
         global ExpInputStack
         waitRight = 0
@@ -1925,6 +1930,8 @@ class syntax_analysis:
                             tmp_Array.curElem[i] = self.Exp(tmpIdentifierList)
                             i += 1
                             self.readSym()
+                        if requiredDim>=0 and not len(tmp_Array.curElem)-i == requiredDim:
+                            sys.exit(-1)
                         ExpInputStack = copy.deepcopy(saveExp)
                         # resultList.append('%' + str(registerNum) + ' = getelementptr i32, i32* ' + str(
                         #     tmpArray.register) + ', i32 ' + str(tmpArray.getCurLength('call')) + '\n')
@@ -2081,6 +2088,8 @@ class syntax_analysis:
             else:
                 ExpInputStack.append(self.sym)
             self.readSym()
+            if self.sym == '{':
+                self.minusSym()
         o_p = Operator_precedence()
         res = o_p.Operator_precedence_grammar('LVal')
         return res
