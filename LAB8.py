@@ -433,7 +433,7 @@ class Operator_precedence:
                         else:
                             num = SymbolStack[-1]
                         if SymbolStack[-2] == '-':
-                            self.single_operator(SymbolStack[stackTop], num)
+                            self.single_operator('-', num)
                             tmp = Expression()
                             tmp.content = '%' + str(registerNum)
                             if SymbolStack[stackTop] == '!':
@@ -450,6 +450,8 @@ class Operator_precedence:
                             SymbolStack.pop()
                             SymbolStack.append(tmp)
                     self.top += 1
+                    if self.top == len(ExpInputStack):
+                        self.top-=1
                     continue
                 if isinstance(SymbolStack[-1], Expression):
                     stackTop = -2
@@ -849,7 +851,16 @@ class syntax_analysis:
             return True
         else:
             return False
-
+    def minusSym(self):
+        if self.tokenIndex >=0:
+            self.sym = self.tokenStream[self.tokenIndex-2]
+            self.tokenIndex -= 1
+            while self.sym == '\n' and self.tokenIndex < len(self.tokenStream):
+                self.sym = self.tokenStream[self.tokenIndex-2]
+                self.tokenIndex -= 1
+            return True
+        else:
+            return False
     def CompUnit(self,type = 'default'):
         global varStart
         global registerNum
@@ -1422,7 +1433,7 @@ class syntax_analysis:
         if self.sym == 'return':
             if self.readSym():
                 if self.sym == ';':
-                    resultList.append('ret')
+                    resultList.append('ret void\n')
                     return 1
                 # while not self.sym == ';':
                 #     if (self.sym[0] == '_' or self.sym[0].isalpha()) and self.sym not in FuncIdent and not findFuncIndexByContent(self.sym)>=0:
@@ -1823,8 +1834,11 @@ class syntax_analysis:
                     if len(tmpFunc.param)>0:
                         while self.readSym():
                             if i>= len(tmpFunc.param):
-                                if self.sym == ';':
-                                    self.tokenIndex-=1
+                                while not self.sym in [';',',',')']:
+                                    self.minusSym()
+                                    self.minusSym()
+                                    self.readSym()
+                                if self.sym in [';',',',')']:
                                     break
                                 sys.exit(-1)
                             if i == len(tmpFunc.param)-1:
@@ -1843,11 +1857,7 @@ class syntax_analysis:
                             i+=1
                             tmpParamRegister.append(res.content)
                             if self.sym == ')':
-                                if self.readSym():
-                                    if self.sym in [';','{']:
-                                        if self.sym == '{':
-                                            self.tokenIndex-=2
-                                        break
+                                break
                             if self.sym in ['+','==','*']:
                                 self.tokenIndex-=1
                                 break
@@ -2142,10 +2152,10 @@ if __name__ == '__main__':
     #     lineList = line.split()
     #     lexicalAnalysis(lineList)
     #     line = file.readline()
-    input = sys.argv[1]
-    ir = sys.argv[2]
-    # input = 'D:\大三上\编译原理\compilingLab\in.txt'
-    # ir = 'D:\大三上\编译原理\compilingLab\out.txt'
+    # input = sys.argv[1]
+    # ir = sys.argv[2]
+    input = 'D:\大三上\编译原理\compilingLab\in.txt'
+    ir = 'D:\大三上\编译原理\compilingLab\out.txt'
     file = open(input)
     FuncAppear = [0 for i in range(len(FuncIdent))]
     # print(input)
