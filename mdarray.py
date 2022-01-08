@@ -400,7 +400,12 @@ class My_array:
                 else:
                     ExpInputStack.append(str(self.curElem[i]))
                 ExpInputStack.append('*')
-                ExpInputStack.append(str(self.dim[len(self.dim)-1-i]))
+                j = i+1
+                while j <len(self.dim):
+                    ExpInputStack.append(str(self.dim[j]))
+                    ExpInputStack.append('*')
+                    j+=1
+                ExpInputStack.pop(-1)
                 ExpInputStack.append('+')
                 i+=1
             if isinstance(self.curElem[-1],Expression):
