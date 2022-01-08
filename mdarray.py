@@ -382,7 +382,12 @@ class My_array:
         res= 0
         if type == 'def':
             while i < len(self.dim)-1:
-                res+=((self.curElem[i]-1)*self.dim[len(self.dim)-1-i])
+                tmpres =1
+                j = len(self.dim)-1
+                while j>i:
+                    tmpres=tmpres*self.dim[j]
+                    j-=1
+                res+=(tmpres*(self.curElem[i]-1))
                 i+=1
             return res + self.curElem[-1]
         else:
@@ -1286,9 +1291,11 @@ class syntax_analysis:
                     tmpArray.curElem =  [0 for i in range(len(tmpArray.dim))]
                     tmpArray.value = [0 for i in range(tmpArray.getTotalLength())]
                     waitRight = 0
+                    pos = 0
                     while not self.sym == ';' and not (waitRight == 0 and self.sym == ','):
                         self.readSym()
                         i = 0
+
                         while self.sym == '{':
                             waitRight+=1
                             tmpArray.curElem[len(tmpArray.dim)-2-i] +=1
@@ -1303,12 +1310,13 @@ class syntax_analysis:
                                 resultList.append('%' + str(registerNum) + ' = getelementptr [' + str(
                                     tmpArray.getTotalLength()) + ' x i32], [' + str(
                                     tmpArray.getTotalLength()) + ' x i32]* ' + str(tmpArray.register) + ', i32 0, i32 ' + str(
-                                    tmpArray.getCurLength('def')) + '\n')
+                                    pos) + '\n')
                                 resultList.append('store i32 '+str(value.content)+', i32* %'+str(registerNum)+'\n')
                                 registerNum+=1
                             else:
                                 value = self.ConstInitVal('global')
-                                tmpArray.value[tmpArray.getCurLength('def')] = value
+                                tmpArray.value[pos] = value
+                            pos+=1
                         while self.sym == '}':
                             waitRight-=1
                             self.readSym()
@@ -1386,9 +1394,11 @@ class syntax_analysis:
                     self.readSym()
                     tmpArray.curElem =  [0 for i in range(len(tmpArray.dim))]
                     waitRight = 0
+                    pos = 0
                     while not self.sym == ';' and not (waitRight == 0 and self.sym == ',' and len(tmpArray.dim)>1):
                         self.readSym()
                         i = 0
+
                         if self.sym == ',' and tokenList[self.tokenIndex] == '{':
                             tmpArray.curElem[0]-=1
                             self.readSym()
@@ -1403,7 +1413,8 @@ class syntax_analysis:
                         if self.sym == ';':
                             break
                         value = self.ConstInitVal(fromList)
-                        tmpArray.value[tmpArray.getCurLength('def')] = value
+                        tmpArray.value[pos] = value
+                        pos+=1
                         if self.sym == ',':
                             tmpArray.curElem[len(tmpArray.dim) - 1] += 1
                     if fromBlock == 'global':
