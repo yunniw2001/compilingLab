@@ -1,7 +1,7 @@
-[jobs.lab8]
+[jobs.mdarray]
 
 image = { source = "dockerfile", path = "." }
 
 run = [
-  "python LAB8.py $input $ir",
+  "python mdarray.py $input $ir",
 ]
