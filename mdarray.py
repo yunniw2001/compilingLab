@@ -10,6 +10,8 @@ ifDef = 0
 ifConst =0
 ifInt = 0
 ifexp = 0
+waitrightBrace = 0
+ifLeftBrace = 0
 SymbolStack = []
 ExpInputStack = []
 registerNum = 0
@@ -40,7 +42,9 @@ def judge_alpha(token):
     global ifConst
     global ifexp
     global ifInt
+    global ifLeftBrace
     global curFuncIndex
+    global waitrightBrace
     if token == 'int':
         ifDef =1
         ifInt = 1
@@ -77,6 +81,7 @@ def judge_alpha(token):
             tokenList.append(token)
         # 函数标识符
         elif '(' in token:
+            waitrightBrace =0
             firstLeft = token.index('(')
             name = token[0:firstLeft]
             if (ifDef == 1 and not ifexp == 1) or findFuncIndexByContent(name) == -1:
@@ -100,16 +105,18 @@ def judge_alpha(token):
             firstLeft = token.index('[')
             name = token[0:firstLeft]
             if (ifDef == 1 and not ifexp == 1) or finArrayIndexByContent(name) == -1:
-                tmp = My_array()
-                tmp.content = name
-                tmp.appearFunc = curFuncIndex
-                arrayList.append(tmp)
-                tmp = identifier()
-                tmp.content = name
-                tmp.type = 'array'
-                identifierList.append(tmp)
-                if curFuncIndex >= 0:
-                    FuncList[curFuncIndex].curFuncIdentifierList.append(tmp)
+                if not (ifexp == 1 and ifLeftBrace>0):
+                    tmp = My_array()
+                    tmp.content = name
+                    if waitrightBrace>0:
+                        tmp.appearFunc = curFuncIndex
+                    arrayList.append(tmp)
+                    tmp = identifier()
+                    tmp.content = name
+                    tmp.type = 'array'
+                    identifierList.append(tmp)
+                    if curFuncIndex >= 0 and waitrightBrace>0:
+                        FuncList[curFuncIndex].curFuncIdentifierList.append(tmp)
             tokenList.append(name)
             tokenList.append('[')
     else:
@@ -149,6 +156,8 @@ def lexical_analysis(linelist):
     global ifConst
     global ifexp
     global ifInt
+    global ifLeftBrace
+    global waitrightBrace
     m = 0
     while m <len(linelist):
         word = linelist[m]
@@ -203,9 +212,14 @@ def lexical_analysis(linelist):
                         if word[index] == ';' or word[index] == '{':
                             ifConst =0
                             ifDef = 0
-                            ifexp =0
                             if word[index] == ';':
                                 ifInt = 0
+                                ifexp = 0
+                            if word[index] == '{':
+                                waitrightBrace+=1
+                                ifLeftBrace+=1
+                        if word[index] == '}':
+                            ifLeftBrace-=1
                         token = word[index]
                         tokenList.append(token)
                         token = ''
@@ -235,13 +249,21 @@ def lexical_analysis(linelist):
                 if word[index] == ';' or word[index] == '{':
                     ifConst = 0
                     ifDef = 0
-                    ifexp =0
                     if word[index] == ';':
                         ifInt = 0
+                        ifexp = 0
+                    if word[index] == '{':
+                        waitrightBrace+=1
+                        ifLeftBrace += 1
+                if word[index] == '}':
+                    waitrightBrace-=1
+                    ifLeftBrace -= 1
                 if word[index] == '=':
                     ifexp =1
+                    ifLeftBrace = 0
                 if word[index] == ',':
-                    ifexp = 0
+                    if ifLeftBrace == 0:
+                        ifexp = 0
                     if ifInt == 1:
                         ifDef = 1
             # 判断是否为逻辑符号
@@ -1030,7 +1052,7 @@ class syntax_analysis:
                 fromList.append(tmp)
                 return tmp
         elif fromRule == 'ConstDef':
-            tmp = findIndexByContent(self.sym)
+            tmp = findIndexByContent(self.sym,fromList)
             if tmp == -1 or len(curBlockStart) == 0 or tmp <curBlockStart[len(curBlockStart)-1]:
                 tmp = identifier()
                 tmp.type = 'const'
@@ -1165,9 +1187,12 @@ class syntax_analysis:
             return self.Stmt(0,fromList)
 
     def Decl(self,fromBlock = 'default',fromList= 'default'):
-        if self.sym == 'const':
-            return self.ConstDecl(fromBlock)
-        elif self.sym == 'int':
+        global tokenList
+        if self.sym == 'const' and not tokenList[self.tokenIndex+2] == '[':
+            return self.ConstDecl(fromBlock,fromList)
+        else:
+            if self.sym == 'const':
+                self.readSym()
             return self.VarDecl(fromBlock,fromList)
 
     def ConstDecl(self,fromBlock,fromList='default'):
@@ -1175,11 +1200,11 @@ class syntax_analysis:
             if self.readSym():
                 self.Btype()
                 if self.readSym():
-                    self.ConstDef(fromBlock)
+                    self.ConstDef(fromBlock,fromList)
                     while not self.sym == ';':
                         if self.sym == ',':
                             if self.readSym():
-                                self.ConstDef(fromBlock)
+                                self.ConstDef(fromBlock,fromList)
                                 continue
                         sys.exit(-1)
                     if self.sym == ';':
@@ -1266,7 +1291,7 @@ class syntax_analysis:
                         i = 0
                         while self.sym == '{':
                             waitRight+=1
-                            tmpArray.curElem[i] +=1
+                            tmpArray.curElem[len(tmpArray.dim)-2-i] +=1
                             i+=1
                             self.readSym()
                             tmpArray.curElem[-1] = 0
@@ -1274,7 +1299,7 @@ class syntax_analysis:
                         #resultList.append('%'+str(registerNum)+' = getelementptr i32, i32* '+tmpArray.register+', i32 '+str(tmpArray.getCurLength('def'))+'\n')
                         if not self.sym == '}':
                             if not fromBlock == 'global':
-                                value = self.InitVal()
+                                value = self.InitVal(fromList)
                                 resultList.append('%' + str(registerNum) + ' = getelementptr [' + str(
                                     tmpArray.getTotalLength()) + ' x i32], [' + str(
                                     tmpArray.getTotalLength()) + ' x i32]* ' + str(tmpArray.register) + ', i32 0, i32 ' + str(
@@ -1334,9 +1359,9 @@ class syntax_analysis:
             return 1
         sys.exit(-1)
 
-    def ConstDef(self,fromBlock):
+    def ConstDef(self,fromBlock,fromList):
         tmp = identifier()
-        tmp = self.Ident('ConstDef')
+        tmp = self.Ident('ConstDef',fromList)
         tmp.type = 'ConstVal'
         tmp.area = 'global'
         if self.readSym():
@@ -1351,7 +1376,7 @@ class syntax_analysis:
                 tmpDimArray = []
                 while not (self.sym == ',' or self.sym == ';' or self.sym == '='):
                     self.readSym()
-                    tmpDim = self.ConstExp()
+                    tmpDim = self.ConstExp(fromList)
                     tmpDimArray.append(tmpDim)
                     self.readSym()
                 tmpArray.dim = tmpDimArray
@@ -1364,9 +1389,12 @@ class syntax_analysis:
                     while not self.sym == ';' and not (waitRight == 0 and self.sym == ',' and len(tmpArray.dim)>1):
                         self.readSym()
                         i = 0
+                        if self.sym == ',' and tokenList[self.tokenIndex] == '{':
+                            tmpArray.curElem[0]-=1
+                            self.readSym()
                         while self.sym == '{':
                             waitRight+=1
-                            tmpArray.curElem[i] += 1
+                            tmpArray.curElem[len(tmpArray.dim)-2-i] += 1
                             i += 1
                             self.readSym()
                         while self.sym == '}':
@@ -1374,7 +1402,7 @@ class syntax_analysis:
                             self.readSym()
                         if self.sym == ';':
                             break
-                        value = self.ConstInitVal()
+                        value = self.ConstInitVal(fromList)
                         tmpArray.value[tmpArray.getCurLength('def')] = value
                         if self.sym == ',':
                             tmpArray.curElem[len(tmpArray.dim) - 1] += 1
@@ -1406,7 +1434,7 @@ class syntax_analysis:
         global registerNum
         while not self.sym == ';' and not self.sym == ',' and not self.sym == ']' and not self.sym == '}':
             if self.sym[0] == '_' or self.sym[0].isalpha():
-                tmp = findIndexByContent(self.sym)
+                tmp = findIndexByContent(self.sym,tmpList)
                 if tmp == -1:
                     sys.exit(-1)
                 else:
@@ -1837,6 +1865,7 @@ class syntax_analysis:
             tmpFunc = FuncList[findFuncIndexByContent(name)]
             if self.readSym():
                 if self.sym == '(':
+                    waitright =0
                     tmpParamRegister = []
                     i = 0
                     if len(tmpFunc.param)>0:
@@ -1865,6 +1894,8 @@ class syntax_analysis:
                             i+=1
                             tmpParamRegister.append(res.content)
                             if self.sym == ')':
+                                if waitright == 0 and not tokenList[self.tokenIndex] == ';':
+                                    self.tokenIndex-=1
                                 break
                             if self.sym in ['+','==','*']:
                                 self.tokenIndex-=1
@@ -2006,7 +2037,8 @@ class syntax_analysis:
     def CondJudgeIfEnd_exp(self,tmpIdentifierList):
         global registerNum
         global ExpInputStack
-        while not tokenList[self.tokenIndex] == '{' and not (self.sym== ')' and findIndexByContent(tokenList[self.tokenIndex],tmpIdentifierList)== -1 and not tokenList[self.tokenIndex] in ['+','-','*','%','/','||','>=','<=','>','<','!','!=','==']):
+        waitright = 0
+        while not tokenList[self.tokenIndex] == '{' and not (self.sym== ')' and ((findIndexByContent(tokenList[self.tokenIndex],tmpIdentifierList)== -1 and not tokenList[self.tokenIndex] in ['+','-','*','%','/','||','>=','<=','>','<','!','!=','=='])or waitright == 0)):
             if (self.sym[0] == '_' or self.sym[0].isalpha()) and self.sym not in FuncIdent and self.sym not in comparator and not self.sym == '&&' and not self.sym == '||'  and not findFuncIndexByContent(self.sym)>=0:
                 tmp = findIndexByContent(self.sym, tmpIdentifierList)
                 if tmp == -1:
@@ -2088,6 +2120,10 @@ class syntax_analysis:
                 tmpExp.type = 'i32'
                 ExpInputStack.append(tmpExp)
             else:
+                if self.sym == '(':
+                    waitright+=1
+                elif self.sym ==')':
+                    waitright-=1
                 ExpInputStack.append(self.sym)
             self.readSym()
             if self.sym == '{':
@@ -2173,42 +2209,42 @@ if __name__ == '__main__':
     # print(input)
     line = file.readline()
     while line:
-        print(line)
-    #     if ifNotes and ('*/' not in line):
-    #         line = file.readline()
-    #         continue
-    #     lineList = line.split()
-    #     lexical_analysis(lineList)
-    #     tokenList.append('\n')
+        # print(line)
+        if ifNotes and ('*/' not in line):
+            line = file.readline()
+            continue
+        lineList = line.split()
+        lexical_analysis(lineList)
+        tokenList.append('\n')
         line = file.readline()
-    # if ifNotes:
-    #     sys.exit(-1)
-    # s_a = syntax_analysis()
-    # s_a.CompUnit('origin')
-    # outFile = open(ir, mode='w')
-    # i = 0
-    # retRes = []
-    # i = 0
-    # ifret = 0
-    # while i<len(resultList):
-    #     if 'ret' in resultList[i]:
-    #         ifret = 1
-    #         retRes.append(resultList[i])
-    #         i+=1
-    #         continue
-    #     if ifret == 1:
-    #         if 'br' in resultList[i]:
-    #             ifret = 0
-    #             i+=1
-    #             continue
-    #         ifret = 0
-    #         retRes.append(resultList[i])
-    #         i+=1
-    #         continue
-    #     retRes.append(resultList[i])
-    #     i+=1
-    #
-    # for sym in retRes:
-    #     outFile.write(sym)
-    # outFile.close()
-    # sys.exit(0)
+    if ifNotes:
+        sys.exit(-1)
+    s_a = syntax_analysis()
+    s_a.CompUnit('origin')
+    outFile = open(ir, mode='w')
+    i = 0
+    retRes = []
+    i = 0
+    ifret = 0
+    while i<len(resultList):
+        if 'ret' in resultList[i]:
+            ifret = 1
+            retRes.append(resultList[i])
+            i+=1
+            continue
+        if ifret == 1:
+            if 'br' in resultList[i]:
+                ifret = 0
+                i+=1
+                continue
+            ifret = 0
+            retRes.append(resultList[i])
+            i+=1
+            continue
+        retRes.append(resultList[i])
+        i+=1
+
+    for sym in retRes:
+        outFile.write(sym)
+    outFile.close()
+    sys.exit(0)
