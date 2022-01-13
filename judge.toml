@@ -1,7 +1,7 @@
-[jobs.mdarray]
+[jobs.short_circuit]
 
 image = { source = "dockerfile", path = "." }
 
 run = [
-  "python mdarray.py $input $ir",
+  "python short_circuit.py $input $ir",
 ]
