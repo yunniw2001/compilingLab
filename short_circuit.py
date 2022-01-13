@@ -1947,7 +1947,7 @@ class syntax_analysis:
         global registerNum
         global ExpInputStack
         waitRight = 0
-        while not tokenList[self.tokenIndex] == ';' and not self.sym == ',' and not self.sym == ';':
+        while not tokenList[self.tokenIndex] == ';' and not self.sym == ',' and not self.sym == ';'and not (self.sym== ')' and not tokenList[self.tokenIndex] in ['+','-','*','%','/','||','>=','<=','>','<','!','!=','==']):
             if (self.sym[0] == '_' or self.sym[0].isalpha()) and self.sym not in FuncIdent and not findFuncIndexByContent(self.sym)>=0:
                 tmp = findIndexByContent(self.sym, tmpIdentifierList)
                 if tmp == -1:
