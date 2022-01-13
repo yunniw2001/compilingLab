@@ -1188,7 +1188,7 @@ class syntax_analysis:
                 i += 1
             if self.readSym():
                 while not self.sym == '}':
-                    self.BlockItem(tmpidentifierList)
+                    self.BlockItem(tmpidentifierList,True)
                     if self.readSym():
                         continue
                     else:
@@ -1205,11 +1205,11 @@ class syntax_analysis:
                 return n
         sys.exit(-1)
 
-    def BlockItem(self,fromList):
+    def BlockItem(self,fromList,state = False):
         if self.sym == 'const' or self.sym == 'int':
             return self.Decl(fromList=fromList)
         else:
-            return self.Stmt(0,fromList)
+            return self.Stmt(0,fromList,state)
 
     def Decl(self,fromBlock = 'default',fromList= 'default'):
         if self.sym == 'const':
@@ -1480,7 +1480,7 @@ class syntax_analysis:
         o_p = Operator_precedence()
         return o_p.Operator_precedence_grammar('ConstExp')
 
-    def Stmt(self,curpos,tmpIdentifierlist):
+    def Stmt(self,curpos,tmpIdentifierlist,ifMyElse = False):
         global registerNum
         if self.sym == 'return':
             if self.readSym():
@@ -1634,7 +1634,7 @@ class syntax_analysis:
                                 self.readSym()
                                 if self.sym == ';':
                                     self.readSym()
-                                if self.sym == 'else':
+                                if self.sym == 'else' and ifMyElse:
                                     self.readSym()
                                     if not self.sym == 'if':
                                         if not 'br' in resultList[-1]:
@@ -1642,16 +1642,18 @@ class syntax_analysis:
                                             ifPos = len(resultList) - 1
                                         else:
                                             ifPos = -1
+                                        if not ifPos == -1 and ifMyElse == True:
+                                            resultList[ifPos] += (str(registerNum) + '\n')
                                         resultList[pos]+=(', label %' + str(registerNum) + '\n')
                                         resultList.append(str(registerNum) + ':\n')
                                         registerNum+=1
                                         self.Stmt(ifPos,tmpIdentifierlist)
-                                        if not ifPos == -1:
+                                        if not ifPos == -1 and ifMyElse == False:
                                             resultList[ifPos]+=(str(registerNum)+'\n')
                                         if not 'br' in resultList[-1]:
                                             resultList.append('br label %'+str(registerNum) + '\n')
-                                        resultList.append(str(registerNum) + ':\n')
-                                        registerNum+=1
+                                            resultList.append(str(registerNum) + ':\n')
+                                            registerNum+=1
                                     elif self.sym == 'if':
                                         if not 'br' in resultList[-1]:
                                             resultList.append('br label %')
@@ -1661,10 +1663,14 @@ class syntax_analysis:
                                         resultList[pos] += (', label %' + str(registerNum) + '\n')
                                         resultList.append(str(registerNum) + ':\n')
                                         registerNum+=1
-                                        self.Stmt(pos,tmpIdentifierlist)
+                                        self.Stmt(pos,tmpIdentifierlist,True)
                                         registerNum-=1
-                                        if not ifPos == -1:
-                                            resultList[ifPos] += (str(registerNum) + '\n')
+                                        if not ifPos == -1 :
+                                            if not ifMyElse:
+                                                resultList[ifPos] += (str(registerNum) + '\n')
+                                            else:
+                                                resultList[ifPos]+=(str(registerNum-1)+'\n')
+                                                registerNum-=1
                                         registerNum += 1
 
                                         # resultList[pos] += (', label %' + str(registerNum) + '\n')
@@ -1678,9 +1684,10 @@ class syntax_analysis:
                                     if not 'br' in resultList[-1]:
                                         resultList.append('br label %'+str(registerNum)+'\n')
                                     resultList.append(str(registerNum) + ':\n')
+                                    toBlock = registerNum
                                     registerNum+=1
                                     self.tokenIndex-=1
-                                    return 1
+                                    return registerNum
             sys.exit(-1)
         elif self.sym == '{':
             return self.Block(registerNum,curpos,FuncList[curFuncIndex],'Stmt')
@@ -2137,7 +2144,7 @@ class syntax_analysis:
             else:
                 ExpInputStack.append(self.sym)
             self.readSym()
-            if self.sym == '{':
+            if self.sym == '{' or self.sym == 'if':
                 self.minusSym()
         o_p = Operator_precedence()
         res = o_p.Operator_precedence_grammar('LVal')
@@ -2259,5 +2266,8 @@ if __name__ == '__main__':
 
     for sym in retRes:
         outFile.write(sym)
-    outFile.close()
+    # outFile = open(ir, mode='w')
+    # for sym in tokenList:
+    #     outFile.write(sym+' ')
+    # outFile.close()
     sys.exit(0)
