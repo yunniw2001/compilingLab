@@ -51,3 +51,4 @@ int main()
     putint(a); putch(32); putint(b); putch(10);
 
     return 0;
+}

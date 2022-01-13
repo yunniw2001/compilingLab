@@ -1669,7 +1669,7 @@ class syntax_analysis:
                                             if not ifMyElse:
                                                 resultList[ifPos] += (str(registerNum) + '\n')
                                             else:
-                                                resultList[ifPos]+=(str(registerNum-1)+'\n')
+                                                resultList[ifPos]+=(str(registerNum-2)+'\n')
                                         registerNum += 1
 
                                         # resultList[pos] += (', label %' + str(registerNum) + '\n')
@@ -2073,6 +2073,10 @@ class syntax_analysis:
                         tmpVal = tmpIdentifierList[tmp]
                     else:
                         tmpVal = tmp
+                        if isinstance(ExpInputStack[-1],Expression):
+                            self.minusSym()
+                            ExpInputStack.append(self.sym)
+                            self.readSym()
                     if tmpVal.type == 'ConstVal':
                         ExpInputStack.append(str(tmpVal.value))
                     elif tmpVal.type == 'array':
@@ -2131,8 +2135,13 @@ class syntax_analysis:
                     ExpInputStack.append(tokenList[self.tokenIndex-2])
                 ExpInputStack.append(self.sym)
             elif self.sym in FuncIdent or findFuncIndexByContent(self.sym)>=0:
+                if len(ExpInputStack)>0 and isinstance(ExpInputStack[-1], Expression):
+                    self.minusSym()
+                    ExpInputStack.append(self.sym)
+                    self.readSym()
                 saveExp = copy.deepcopy(ExpInputStack)
                 ExpInputStack = []
+
                 res = self.Func(tmpIdentifierList)
                 ExpInputStack = saveExp
                 tmpExp = Expression()
