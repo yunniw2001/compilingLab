@@ -830,6 +830,53 @@ def trans_i32_to_i1(oriRegister):
     registerNum += 1
     return res
 
+class ControlFlow():
+    tmpList = []
+    IfIsIfState = False
+    def mainMethod(self):
+        global tokenList
+        index = 0
+        while index < len(tokenList):
+            if tokenList[index] not in ['&&','||']:
+                self.tmpList.append(tokenList[index])
+            elif tokenList[index] == '&&':
+                self.tmpList.append(')')
+                self.tmpList.append('\n')
+                self.tmpList.append('if')
+                self.tmpList.append('(')
+            elif tokenList[index] == '||':
+                self.tmpList.append(')')
+                self.tmpList.append('\n')
+                self.findRelatedContent(index)
+                self.tmpList.append('else')
+                self.tmpList.append('if')
+                self.tmpList.append('(')
+            elif tokenList[index] == 'if':
+                self.IfIsIfState = True
+            else:
+                self.tmpList.append(tokenList[index])
+            index+=1
+        tokenList = copy.deepcopy(self.tmpList)
+        return
+    def findRelatedContent(self,i):
+        index = copy.deepcopy(i)
+        while not tokenList[index] == '{' and not (tokenList[index] == ')' and tokenList[index+1] not in [')','+','*','/','-','==','%','{','&&','||']):
+            index+=1
+        if tokenList[index] == '{':
+            while not tokenList[index]  == '}':
+                self.tmpList.append(tokenList[index])
+                index+=1
+            self.tmpList.append('}')
+            return
+        else:
+            while not tokenList[index] == ';':
+                self.tmpList.append(tokenList[index])
+                index+=1
+            self.tmpList.append(';')
+            return
+
+
+
 class syntax_analysis:
     tokenStream = []
     sym = ''
@@ -2006,7 +2053,7 @@ class syntax_analysis:
     def CondJudgeIfEnd_exp(self,tmpIdentifierList):
         global registerNum
         global ExpInputStack
-        while not tokenList[self.tokenIndex] == '{' and not (self.sym== ')' and findIndexByContent(tokenList[self.tokenIndex],tmpIdentifierList)== -1 and not tokenList[self.tokenIndex] in ['+','-','*','%','/','||','>=','<=','>','<','!','!=','==']):
+        while not tokenList[self.tokenIndex] == '{' and not (self.sym== ')' and not tokenList[self.tokenIndex] in ['+','-','*','%','/','||','>=','<=','>','<','!','!=','==']):
             if (self.sym[0] == '_' or self.sym[0].isalpha()) and self.sym not in FuncIdent and self.sym not in comparator and not self.sym == '&&' and not self.sym == '||'  and not findFuncIndexByContent(self.sym)>=0:
                 tmp = findIndexByContent(self.sym, tmpIdentifierList)
                 if tmp == -1:
@@ -2173,42 +2220,44 @@ if __name__ == '__main__':
     # print(input)
     line = file.readline()
     while line:
-        print(line)
-        # if ifNotes and ('*/' not in line):
-        #     line = file.readline()
-        #     continue
-        # lineList = line.split()
-        # lexical_analysis(lineList)
-        # tokenList.append('\n')
+        # print(line)
+        if ifNotes and ('*/' not in line):
+            line = file.readline()
+            continue
+        lineList = line.split()
+        lexical_analysis(lineList)
+        tokenList.append('\n')
         line = file.readline()
-    # if ifNotes:
-    #     sys.exit(-1)
-    # s_a = syntax_analysis()
-    # s_a.CompUnit('origin')
-    # outFile = open(ir, mode='w')
-    # i = 0
-    # retRes = []
-    # i = 0
-    # ifret = 0
-    # while i<len(resultList):
-    #     if 'ret' in resultList[i]:
-    #         ifret = 1
-    #         retRes.append(resultList[i])
-    #         i+=1
-    #         continue
-    #     if ifret == 1:
-    #         if 'br' in resultList[i]:
-    #             ifret = 0
-    #             i+=1
-    #             continue
-    #         ifret = 0
-    #         retRes.append(resultList[i])
-    #         i+=1
-    #         continue
-    #     retRes.append(resultList[i])
-    #     i+=1
-    #
-    # for sym in retRes:
-    #     outFile.write(sym)
-    # outFile.close()
-    # sys.exit(0)
+    if ifNotes:
+        sys.exit(-1)
+    c_f = ControlFlow()
+    c_f.mainMethod()
+    s_a = syntax_analysis()
+    s_a.CompUnit('origin')
+    outFile = open(ir, mode='w')
+    i = 0
+    retRes = []
+    i = 0
+    ifret = 0
+    while i<len(resultList):
+        if 'ret' in resultList[i]:
+            ifret = 1
+            retRes.append(resultList[i])
+            i+=1
+            continue
+        if ifret == 1:
+            if 'br' in resultList[i]:
+                ifret = 0
+                i+=1
+                continue
+            ifret = 0
+            retRes.append(resultList[i])
+            i+=1
+            continue
+        retRes.append(resultList[i])
+        i+=1
+
+    for sym in retRes:
+        outFile.write(sym)
+    outFile.close()
+    sys.exit(0)
