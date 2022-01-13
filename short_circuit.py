@@ -1670,7 +1670,6 @@ class syntax_analysis:
                                                 resultList[ifPos] += (str(registerNum) + '\n')
                                             else:
                                                 resultList[ifPos]+=(str(registerNum-1)+'\n')
-                                                registerNum-=1
                                         registerNum += 1
 
                                         # resultList[pos] += (', label %' + str(registerNum) + '\n')
