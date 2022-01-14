@@ -1,54 +1,41 @@
-int a = -1, b = 1;
+int g = 0;
 
 
 
-int inc_a()
+int func(int n) {
 
-{
+  g = g + n;
 
-    int b = a;
+  putint(g);
 
-    b = b + 1;
-
-    a = b;
-
-    return a;
+  return g;
 
 }
 
 
 
-int main()
+int main() {
 
-{
+  int i;
 
-    int k = 5;
+  i = getint();
 
-    while (k >= 0) {
+  if (i > 10 && func(i)) i = 1; else i = 0;
 
-        if (inc_a() && inc_a() && inc_a()) {
+  i = getint();
 
-            putint(a); putch(32); putint(b); putch(10);
+  if (i > 11 && func(i)) i = 1; else i = 0;
 
-        }
+  i = getint();
 
-        if (inc_a() < 14 || inc_a() && inc_a() - inc_a() + 1) {
+  if (i <= 99 || func(i)) i = 1; else i = 0;
 
-            putint(a); putch(10);
+  i = getint();
 
-            b = b * 2;
+  if (i <= 100 || func(i)) i = 1; else i = 0;
 
-        } else {
+  if (!func(99) && func(100)) i = 1; else i = 0;
 
-            inc_a();
+  return 0;
 
-        }
-
-        k = k - 1;
-
-    }
-
-    putint(a); putch(32); putint(b); putch(10);
-
-    return 0;
 }
