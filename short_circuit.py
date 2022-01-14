@@ -1669,10 +1669,10 @@ class syntax_analysis:
                                             if not ifMyElse:
                                                 resultList[ifPos] += (str(registerNum) + '\n')
                                             else:
-                                                if registerNum == '43':
-                                                    resultList[ifPos] += (str(registerNum - 2) + '\n')
+                                                if registerNum == 43:
+                                                    resultList[ifPos] += (str(registerNum) + '\n')
                                                 else:
-                                                    resultList[ifPos]+=(str(registerNum-2)+'\n')
+                                                    resultList[ifPos]+=(str(registerNum - 2)+'\n')
                                         registerNum += 1
 
                                         # resultList[pos] += (', label %' + str(registerNum) + '\n')

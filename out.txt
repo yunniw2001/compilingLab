@@ -59,7 +59,7 @@ call void @putch(i32 10)
 %25 = load i32, i32* @b
 %26 = mul i32 %25, 2
 store i32 %26, i32* @b
-br label %41
+br label %43
 27:
 %28 = call i32 @inc_a()
 %29 = icmp ne i32 %28, 0
