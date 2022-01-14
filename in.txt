@@ -1,163 +1,54 @@
-int array[110];
-
-int n;
-
-void init(int n) {
-
-  int i = 1;
-
-  while (i <= n * n + 1) {
-
-    array[i] = -1;
-
-    i = i + 1;
-
-  }
-
-}
+int a = -1, b = 1;
 
 
 
-int findfa(int a) {
+int inc_a()
 
-  if (array[a] == a)
+{
+
+    int b = a;
+
+    b = b + 1;
+
+    a = b;
 
     return a;
 
-  else {
-
-    array[a] = findfa(array[a]);
-
-    return array[a];
-
-  }
-
 }
 
-void mmerge(int a, int b) {
-
-  int m = findfa(a);
-
-  int n = findfa(b);
-
-  if (m != n) array[m] = n;
-
-}
-
-int main() {
-
-  int t, m;
-
-  int a, b;
-
-  t = 1;
-
-  while (t) {
-
-    t = t - 1;
-
-    n = 4;
-
-    m = 10;
-
-    int i = 0;
-
-    int flag = 0;
-
-    init(n);
-
-    int k = n * n + 1;
 
 
+int main()
 
-    while (i < m) {
+{
 
-      a = getint();
+    int k = 5;
 
-      b = getint();
+    while (k >= 0) {
 
+        if (inc_a() && inc_a() && inc_a()) {
 
-
-      if (!flag) {
-
-        int loc = n * (a - 1) + b;
-
-
-
-        array[loc] = loc;
-
-        if (a == 1) {
-
-          array[0] = 0;
-
-          mmerge(loc, 0);
+            putint(a); putch(32); putint(b); putch(10);
 
         }
 
-        if (a == n) {
+        if (inc_a() < 14 || inc_a() && inc_a() - inc_a() + 1) {
 
-          array[k] = k;
+            putint(a); putch(10);
 
-          mmerge(loc, k);
+            b = b * 2;
 
-        }
+        } else {
 
-        if (b < n && array[loc + 1] != -1) {
-
-          mmerge(loc, loc + 1);
+            inc_a();
 
         }
 
-        if (b > 1 && array[loc - 1] != -1) {
-
-          mmerge(loc, loc - 1);
-
-        }
-
-        if (a < n && array[loc + n] != -1) {
-
-          mmerge(loc, loc + n);
-
-        }
-
-        if (a > 1 && array[loc - n] != -1) {
-
-          mmerge(loc, loc - n);
-
-        }
-
-
-
-        if (array[0] != -1 && array[k] != -1 && findfa(0) == findfa(k)) {
-
-          flag = 1;
-
-          int tmp = i + 1;
-
-          putint(tmp);
-
-          putch(10);
-
-        }
-
-      }
-
-
-
-      i = i + 1;
+        k = k - 1;
 
     }
 
-    if (!flag) {
+    putint(a); putch(32); putint(b); putch(10);
 
-      putint(-1);
-
-      putch(10);
-
-    }
-
-  }
-
-  return 0;
-
+    return 0;
 }
