@@ -833,55 +833,6 @@ def trans_i32_to_i1(oriRegister):
 class ControlFlow():
     tmpList = []
     IfIsIfState = False
-    def addBrace(self):
-        saveList = []
-        isContent = False
-        haveLeft = 0
-        waitRight = 0
-        global tokenList
-        i = 0
-        while i<len(tokenList):
-            saveList.append(tokenList[i])
-            if tokenList[i] in ['if','else']:
-                self.IfIsIfState = True
-            elif tokenList[i] == ';':
-                j = i+1
-                while tokenList[j] == '\n':
-                    j+=1
-                if tokenList[j] == 'else':
-                    while haveLeft>0:
-                        saveList.append('}')
-                        haveLeft-=1
-                    self.IfIsIfState = False
-                    isContent = False
-            if self.IfIsIfState or isContent:
-                if tokenList[i] == '{':
-                    self.IfIsIfState = False
-                    isContent = True
-                    haveLeft+=1
-                if tokenList[i] == '}':
-                    isContent = False
-                    haveLeft-=1
-                    while haveLeft>0:
-                        saveList.append('}')
-                        haveLeft-=1
-                    haveLeft=0
-                    waitRight=0
-                if tokenList[i] == '(':
-                    waitRight+=1
-                elif tokenList[i] == ')' and self.IfIsIfState :
-                    waitRight-=1
-                    if waitRight == 0:
-                        j = i+1
-                        while tokenList[j] == '\n':
-                            j+=1
-                        if not tokenList[j] in ['{',';',')']:
-                            saveList.append('{')
-                            isContent = True
-                            self.IfIsIfState = False
-                            haveLeft+=1
-            i+=1
-        tokenList = saveList
     def mainMethod(self):
         global tokenList
         index = 0
@@ -906,7 +857,6 @@ class ControlFlow():
                 self.tmpList.append(tokenList[index])
             index+=1
         tokenList = copy.deepcopy(self.tmpList)
-        self.addBrace()
         return
     def findRelatedContent(self,i):
         index = copy.deepcopy(i)
@@ -919,8 +869,6 @@ class ControlFlow():
             self.tmpList.append('}')
             return
         else:
-            while tokenList[index] == ')':
-                index+=1
             while not tokenList[index] == ';':
                 self.tmpList.append(tokenList[index])
                 index+=1
@@ -1241,8 +1189,6 @@ class syntax_analysis:
             if self.readSym():
                 while not self.sym == '}':
                     self.BlockItem(tmpidentifierList,True)
-                    if self.sym == '}':
-                        self.minusSym()
                     if self.readSym():
                         continue
                     else:
@@ -2327,5 +2273,5 @@ if __name__ == '__main__':
     # outFile = open(ir, mode='w')
     # for sym in tokenList:
     #     outFile.write(sym+' ')
-    outFile.close()
+    # outFile.close()
     sys.exit(0)
